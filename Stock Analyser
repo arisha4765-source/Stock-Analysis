@@ -1,0 +1,175 @@
+// ADVANCED STOCK ANALYSIS PLATFORM (PRO LEVEL + WEBSOCKET LIVE DATA)
+
+// ================= BACKEND (Node.js + Express + WebSocket) =================
+const express = require("express");
+const axios = require("axios");
+const cors = require("cors");
+const http = require("http");
+const WebSocket = require("ws");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+// ================= TECHNICAL INDICATORS =================
+function SMA(data, period) {
+  return data.map((_, i, arr) => {
+    if (i < period) return null;
+    const slice = arr.slice(i - period, i);
+    return slice.reduce((a, b) => a + b, 0) / period;
+  });
+}
+
+function RSI(prices, period = 14) {
+  let gains = 0, losses = 0;
+  for (let i = 1; i <= period; i++) {
+    const diff = prices[i] - prices[i - 1];
+    if (diff >= 0) gains += diff;
+    else losses -= diff;
+  }
+  let rs = gains / losses;
+  return 100 - (100 / (1 + rs));
+}
+
+function MACD(prices) {
+  const ema12 = SMA(prices, 12);
+  const ema26 = SMA(prices, 26);
+  return ema12.map((val, i) => val && ema26[i] ? val - ema26[i] : null);
+}
+
+// ================= AI MOCK =================
+function aiPrediction(prices) {
+  const last = prices[prices.length - 1];
+  const trend = prices.slice(-10).reduce((a, b, i, arr) => {
+    if (i === 0) return 0;
+    return a + (b - arr[i - 1]);
+  }, 0);
+  return last + trend / 10;
+}
+
+function getAdvancedRecommendation(prices) {
+  const sma20 = SMA(prices, 20).pop();
+  const sma50 = SMA(prices, 50).pop();
+  const rsi = RSI(prices);
+  const macd = MACD(prices).pop();
+
+  let score = 0;
+  if (sma20 > sma50) score += 2;
+  if (rsi < 30) score += 2;
+  if (rsi > 70) score -= 2;
+  if (macd > 0) score += 1;
+
+  if (score >= 3) return "STRONG BUY";
+  if (score === 2) return "BUY";
+  if (score === 1) return "HOLD";
+  if (score <= -2) return "SELL";
+  return "NEUTRAL";
+}
+
+// ================= REST API =================
+app.get("/api/stock/:symbol", async (req, res) => {
+  try {
+    const symbol = req.params.symbol;
+    const response = await axios.get(
+      `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=YOUR_API_KEY`
+    );
+
+    const timeSeries = response.data["Time Series (Daily)"];
+    const prices = Object.values(timeSeries)
+      .map(day => parseFloat(day["4. close"]))
+      .reverse();
+
+    res.json({
+      prices,
+      prediction: aiPrediction(prices),
+      recommendation: getAdvancedRecommendation(prices)
+    });
+  } catch (err) {
+    res.status(500).json({ error: "API error" });
+  }
+});
+
+// ================= WEBSOCKET (LIVE UPDATES SIMULATION) =================
+wss.on("connection", (ws) => {
+  console.log("Client connected");
+
+  let price = 100;
+
+  const interval = setInterval(() => {
+    // simulate live price movement
+    price += (Math.random() - 0.5) * 2;
+
+    ws.send(JSON.stringify({
+      price: price.toFixed(2),
+      time: new Date().toLocaleTimeString()
+    }));
+  }, 2000);
+
+  ws.on("close", () => {
+    clearInterval(interval);
+    console.log("Client disconnected");
+  });
+});
+
+server.listen(5000, () => console.log("Server running on port 5000"));
+
+
+// ================= FRONTEND (React + WebSocket) =================
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
+export default function App() {
+  const [symbol, setSymbol] = useState("");
+  const [data, setData] = useState(null);
+  const [livePrice, setLivePrice] = useState(null);
+
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:5000");
+
+    ws.onmessage = (event) => {
+      const parsed = JSON.parse(event.data);
+      setLivePrice(parsed);
+    };
+
+    return () => ws.close();
+  }, []);
+
+  const fetchStock = async () => {
+    const res = await axios.get(`http://localhost:5000/api/stock/${symbol}`);
+    setData(res.data);
+  };
+
+  return (
+    <div style={{ padding: 30 }}>
+      <h1>⚡ Live Stock Analyzer</h1>
+
+      <input
+        placeholder="Enter Stock Symbol"
+        value={symbol}
+        onChange={(e) => setSymbol(e.target.value)}
+      />
+
+      <button onClick={fetchStock}>Analyze</button>
+
+      {livePrice && (
+        <div style={{ marginTop: 20 }}>
+          <h2>Live Price: {livePrice.price}</h2>
+          <p>Updated at: {livePrice.time}</p>
+        </div>
+      )}
+
+      {data && (
+        <div>
+          <h2>{data.recommendation}</h2>
+          <h3>Predicted: {data.prediction.toFixed(2)}</h3>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ================= NEXT STEP =================
+// Replace simulated WebSocket with real broker streaming API (Zerodha Kite / Binance / Polygon)
