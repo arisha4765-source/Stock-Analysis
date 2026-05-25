@@ -19,7 +19,58 @@ app.get("/", (req, res) => {
 
 app.get("const axios = require("axios");
 
-app.get("/api/stock/:symbol", async (req, res) => {
+app.get("app.get("/api/stock/:symbol", async (req, res) => {
+  try {
+    const symbol = req.params.symbol.toUpperCase();
+
+    const response = await axios.get(
+      `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=YOUR_API_KEY`
+    );
+
+    const series = response.data["Time Series (Daily)"];
+
+    if (!series) {
+      return res.status(404).json({
+        error: "Stock not found"
+      });
+    }
+
+    const prices = Object.values(series)
+      .slice(0, 20)
+      .map((day) => parseFloat(day["4. close"]));
+
+    const latestPrice = prices[0];
+
+    const average =
+      prices.reduce((a, b) => a + b, 0) / prices.length;
+
+    // Simple AI-like prediction
+    const prediction = (
+      latestPrice + (latestPrice - average) * 0.5
+    ).toFixed(2);
+
+    let recommendation = "HOLD";
+
+    if (prediction > latestPrice) {
+      recommendation = "BUY";
+    } else if (prediction < latestPrice) {
+      recommendation = "SELL";
+    }
+
+    res.json({
+      symbol,
+      currentPrice: latestPrice,
+      predictedPrice: prediction,
+      recommendation
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      error: "API error"
+    });
+  }
+});", async (req, res) => {
   try {
     const symbol = req.params.symbol.toUpperCase();
 
