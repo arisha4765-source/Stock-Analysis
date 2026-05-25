@@ -42,6 +42,7 @@ export default function App() {
       );
 
       console.log("HISTORY RESPONSE:", historyRes.data);
+      console.log("history length:", history.length);
 
       // ✅ Finnhub candle data is inside "c"
       const prices = historyRes.data?.c;
