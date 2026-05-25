@@ -23,13 +23,26 @@ export default function App() {
   const [data, setData] = useState(null);
   const [watchlist, setWatchlist] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
+  const [history, setHistory] = useState([]);
 
-  const fetchStock = async () => {
-    try {
-      const res = await axios.get(
-        "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
-      );
+const fetchStock = async () => {
+  try {
+    const stockRes = await axios.get(
+      "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
+    );
 
+    setData(stockRes.data);
+
+    const historyRes = await axios.get(
+      "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
+    );
+
+    setHistory(historyRes.data.c);
+  } catch (err) {
+    console.error(err);
+    alert("Error fetching stock data");
+  }
+};
       setData(res.data);
     } catch (err) {
       console.error(err);
@@ -38,20 +51,17 @@ export default function App() {
   };
 
 const chartData = {
-  labels: ["1", "2", "3", "4", "5", "6", "7"],
+  labels: history.map((_, i) => i + 1),
 
   datasets: [
     {
-      label: `${symbol} Trend`,
-
-      data: Array.from({ length: 7 }, () =>
-        Math.floor(
-          data.price + (Math.random() * 20 - 10)
-        )
-      ),
+      label: `${symbol} Real Price History`,
+      data: history,
 
       borderColor: "rgb(75, 192, 192)",
-      backgroundColor: "rgba(75, 192, 192, 0.2)",
+      backgroundColor:
+        "rgba(75, 192, 192, 0.2)",
+
       tension: 0.4
     }
   ]
