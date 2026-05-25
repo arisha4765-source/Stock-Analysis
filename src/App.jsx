@@ -41,25 +41,16 @@ export default function App() {
         "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
       );
 
-      const raw = historyRes.data;
+      console.log("HISTORY RESPONSE:", historyRes.data);
 
-      console.log("RAW HISTORY RESPONSE:", raw);
+      // ✅ Finnhub candle data is inside "c"
+      const prices = historyRes.data?.c;
 
-      let parsedHistory = [];
-
-      if (Array.isArray(raw)) {
-        parsedHistory = raw;
-      } else if (Array.isArray(raw?.c)) {
-        parsedHistory = raw.c;
-      } else if (Array.isArray(raw?.data?.c)) {
-        parsedHistory = raw.data.c;
-      } else if (Array.isArray(raw?.prices)) {
-        parsedHistory = raw.prices;
-      } else if (Array.isArray(raw?.result)) {
-        parsedHistory = raw.result;
+      if (Array.isArray(prices)) {
+        setHistory(prices);
+      } else {
+        setHistory([]);
       }
-
-      setHistory(parsedHistory);
     } catch (err) {
       console.error(err);
       alert("Error fetching stock data");
