@@ -50,7 +50,48 @@ app.get("/api/stock/:symbol", async (req, res) => {
 });
 
 // ---------------- HISTORY API ----------------
-aaf7843c99e64f0d8a388c0ad4e736c7
+app.get("/api/history/:symbol", async (req, res) => {
+  try {
+    const symbol = req.params.symbol.toUpperCase();
+
+    const response = await axios.get(
+      `https://api.twelvedata.com/time_series`,
+      {
+        params: {
+          symbol,
+          interval: "1day",
+          outputsize: 30,
+          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7",
+        },
+      }
+    );
+
+    const values = response.data?.values;
+
+    if (!values) {
+      return res.json({
+        c: [],
+        error: response.data?.message || "No data from Twelve Data",
+      });
+    }
+
+    // Twelve Data returns newest first → reverse it
+    const closePrices = values
+      .reverse()
+      .map((item) => parseFloat(item.close));
+
+    res.json({
+      c: closePrices,
+    });
+
+  } catch (err) {
+    console.error("HISTORY ERROR:", err.message);
+    res.json({
+      c: [],
+      error: "API failed",
+    });
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 
