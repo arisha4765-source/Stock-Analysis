@@ -96,25 +96,24 @@ const chartData = {
         Add to Watchlist
       </button>
 
-      {data && (
-        <div style={{ marginTop: 20 }}>
-          <h2>{data.symbol}</h2>
+{data && (
+  <div style={{ marginTop: 20 }}>
+    <h2>{data.symbol}</h2>
 
-          <h3>Price: ${data.price}</h3>
+    <h3>Price: ${data.price}</h3>
 
-          <h3>
-            Change: {data.change}%
-          </h3>
+    <h3>
+      Change: {data.change}%
+    </h3>
 
-          <h3>
-            Recommendation:
-            {data.recommendation}
-          </h3>
+    <h3>
+      Recommendation:
+      {data.recommendation}
+    </h3>
 
-          <Line data={chartData} />
-        </div>
-      )}
-
+    HERE_GOES_THE_NEW_GRAPH_BLOCK
+  </div>
+)}
       <div style={{ marginTop: 30 }}>
         <h2>⭐ Watchlist</h2>
 
