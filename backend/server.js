@@ -6,7 +6,8 @@ const app = express();
 
 app.use(
   cors({
-    origin: "https://stock-analysis-1-1mhd.onrender.com"
+    origin:
+      "https://stock-analysis-1-1mhd.onrender.com"
   })
 );
 
@@ -18,10 +19,11 @@ app.get("/", (req, res) => {
 
 app.get("/api/stock/:symbol", async (req, res) => {
   try {
-    const symbol = req.params.symbol.toUpperCase();
+    const symbol =
+      req.params.symbol.toUpperCase();
 
     const response = await axios.get(
-      `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=d8a10g9r01qhv1uvp210d8a10g9r01qhv1uvp21g`
+      `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=YOUR_FINNHUB_KEY`
     );
 
     const stock = response.data;
@@ -37,9 +39,12 @@ app.get("/api/stock/:symbol", async (req, res) => {
 
     let recommendation = "HOLD";
 
-    if (change > 2) recommendation = "STRONG BUY";
-    else if (change > 0) recommendation = "BUY";
-    else if (change < -2) recommendation = "SELL";
+    if (change > 2)
+      recommendation = "STRONG BUY";
+    else if (change > 0)
+      recommendation = "BUY";
+    else if (change < -2)
+      recommendation = "SELL";
 
     res.json({
       symbol,
@@ -56,8 +61,11 @@ app.get("/api/stock/:symbol", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT =
+  process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(
+    `Server running on port ${PORT}`
+  );
 });
