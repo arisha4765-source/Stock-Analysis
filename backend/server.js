@@ -21,28 +21,19 @@ app.get("/api/stock/:symbol", async (req, res) => {
     const symbol = req.params.symbol.toUpperCase();
 
     const response = await axios.get(
-      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=AVY4DFUEKWVFZP9I`
+      `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=d8a10g9r01qhv1uvp210d8a10g9r01qhv1uvp21g`
     );
 
-    console.log(response.data);
+    const stock = response.data;
 
-    const stock = response.data["Global Quote"];
-
-    if (
-      !stock ||
-      Object.keys(stock).length === 0 ||
-      !stock["05. price"]
-    ) {
+    if (!stock || !stock.c) {
       return res.status(404).json({
-        error: "Stock not found",
-        apiResponse: response.data
+        error: "Stock not found"
       });
     }
 
-    const price = parseFloat(stock["05. price"]);
-    const change = parseFloat(
-      stock["10. change percent"]
-    );
+    const price = stock.c;
+    const change = stock.dp;
 
     let recommendation = "HOLD";
 
