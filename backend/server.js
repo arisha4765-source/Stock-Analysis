@@ -25,7 +25,28 @@ app.get("/api/stock/:symbol", async (req, res) => {
     const response = await axios.get(
       `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=d8a10g9r01qhv1uvp210d8a10g9r01qhv1uvp21g`
     );
+app.get("/api/history/:symbol", async (req, res) => {
+  try {
+    const symbol = req.params.symbol.toUpperCase();
 
+    const now = Math.floor(Date.now() / 1000);
+
+    const oneWeekAgo =
+      now - 60 * 60 * 24 * 7;
+
+    const response = await axios.get(
+      `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${oneWeekAgo}&to=${now}&token=d8a10g9r01qhv1uvp210d8a10g9r01qhv1uvp21g`
+    );
+
+    res.json(response.data);
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      error: "History API error"
+    });
+  }
+});
     const stock = response.data;
 
     if (!stock || !stock.c) {
