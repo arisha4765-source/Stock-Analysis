@@ -4,11 +4,9 @@ const cors = require("cors");
 
 const app = express();
 
-app.use(
-  cors({
-    origin: "https://stock-analysis-1-1mhd.onrender.com",
-  })
-);
+app.use(cors({
+  origin: "*", // allow frontend to connect safely
+}));
 
 app.use(express.json());
 
@@ -65,18 +63,19 @@ app.get("/api/history/:symbol", async (req, res) => {
 
     if (response.data.s !== "ok") {
       return res.status(400).json({
-        error: "Finnhub returned no data",
+        error: "No chart data",
         raw: response.data,
       });
     }
 
-    res.json(response.data);
-  } catch (err) {
-    console.log("HISTORY ERROR:", err.message);
-    res.status(500).json({
-      error: "History API error",
-      details: err.message,
+    res.json({
+      c: response.data.c,
+      t: response.data.t,
     });
+
+  } catch (err) {
+    console.error("HISTORY ERROR:", err.message);
+    res.status(500).json({ error: "History API error" });
   }
 });
 
