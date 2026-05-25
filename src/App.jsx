@@ -96,19 +96,16 @@ const chartData = {
         Add to Watchlist
       </button>
 
-{data && (
+      {data && (
   <div style={{ marginTop: 20 }}>
     <h2>{data.symbol}</h2>
 
     <h3>Price: ${data.price}</h3>
 
-    <h3>
-      Change: {data.change}%
-    </h3>
+    <h3>Change: {data.change}%</h3>
 
     <h3>
-      Recommendation:
-      {data.recommendation}
+      Recommendation: {data.recommendation}
     </h3>
 
     <div
@@ -124,26 +121,7 @@ const chartData = {
       <Line
         data={chartData}
         options={{
-          responsive: true,
-          plugins: {
-            legend: {
-              labels: {
-                color: "#000"
-              }
-            }
-          },
-          scales: {
-            x: {
-              ticks: {
-                color: "#000"
-              }
-            },
-            y: {
-              ticks: {
-                color: "#000"
-              }
-            }
-          }
+          responsive: true
         }}
       />
     </div>
