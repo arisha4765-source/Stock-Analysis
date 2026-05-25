@@ -104,7 +104,8 @@ setHistory(Array.isArray(historyRes.data?.c) ? historyRes.data.c : []);
         minHeight: "100vh",
       }}
     >
-      <h1>📈 Live Stock Analyzer</h1>
+      <h1>📈 Live Stock Analyzer Dashboard</h1>
+<p>Track real-time stock prices, charts, and market trends instantly.</p>
 
       <button onClick={() => setDarkMode(!darkMode)}>
         Toggle Theme
