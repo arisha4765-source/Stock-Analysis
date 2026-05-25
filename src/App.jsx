@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 import {
@@ -25,40 +25,52 @@ ChartJS.register(
 export default function App() {
   const [symbol, setSymbol] = useState("");
   const [data, setData] = useState(null);
+  const [history, setHistory] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
-  const [history, setHistory] = useState([]);
 
-  const fetchStock = async () => {
+  // 📊 FETCH STOCK DATA
+  const fetchStock = async (loadHistory = false) => {
     try {
+      if (!symbol) return;
+
       const stockRes = await axios.get(
         "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
       );
 
       setData(stockRes.data);
 
-      const historyRes = await axios.get(
-  "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
-);
+      // only load history once (important for performance)
+      if (loadHistory) {
+        const historyRes = await axios.get(
+          "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
+        );
 
-console.log("HISTORY RESPONSE:", historyRes.data);
+        const cleanData = Array.isArray(historyRes.data?.c)
+          ? historyRes.data.c
+          : [];
 
-setHistory(Array.isArray(historyRes.data?.c) ? historyRes.data.c : []);
-
-      // ✅ Finnhub candle data is inside "c"
-      const prices = historyRes.data?.c;
-
-      if (Array.isArray(prices)) {
-        setHistory(prices);
-      } else {
-        setHistory([]);
+        setHistory(cleanData);
       }
     } catch (err) {
       console.error(err);
-      alert("Error fetching stock data");
     }
   };
 
+  // ⚡ REAL-TIME PRICE UPDATE (every 5 sec)
+  useEffect(() => {
+    if (!symbol) return;
+
+    fetchStock(true); // initial full load
+
+    const interval = setInterval(() => {
+      fetchStock(false); // only update price
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [symbol]);
+
+  // 📈 CHART DATA
   const chartData = {
     labels: history.map((_, i) => i + 1),
     datasets: [
@@ -72,29 +84,6 @@ setHistory(Array.isArray(historyRes.data?.c) ? historyRes.data.c : []);
     ],
   };
 
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        labels: {
-          color: darkMode ? "#fff" : "#000",
-        },
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: darkMode ? "#fff" : "#000",
-        },
-      },
-      y: {
-        ticks: {
-          color: darkMode ? "#fff" : "#000",
-        },
-      },
-    },
-  };
-
   return (
     <div
       style={{
@@ -105,22 +94,21 @@ setHistory(Array.isArray(historyRes.data?.c) ? historyRes.data.c : []);
       }}
     >
       <h1>📈 Live Stock Analyzer Dashboard</h1>
-<p>Track real-time stock prices, charts, and market trends instantly.</p>
+      <p>Track real-time stock prices, charts, and market trends.</p>
 
       <button onClick={() => setDarkMode(!darkMode)}>
         Toggle Theme
       </button>
 
-      <br />
-      <br />
+      <br /><br />
 
       <input
-        placeholder="Enter Stock Symbol"
+        placeholder="Enter Stock Symbol (AAPL, TSLA)"
         value={symbol}
-        onChange={(e) => setSymbol(e.target.value)}
+        onChange={(e) => setSymbol(e.target.value.toUpperCase())}
       />
 
-      <button onClick={fetchStock}>Analyze</button>
+      <button onClick={() => fetchStock(true)}>Analyze</button>
 
       <button
         onClick={() => setWatchlist([...watchlist, symbol])}
@@ -128,48 +116,52 @@ setHistory(Array.isArray(historyRes.data?.c) ? historyRes.data.c : []);
         Add to Watchlist
       </button>
 
+      {/* 📊 STOCK INFO */}
       {data && (
         <div style={{ marginTop: 20 }}>
           <h2>{data.symbol}</h2>
           <h3>Price: ${data.price}</h3>
           <h3>Change: {data.change}%</h3>
           <h3>Recommendation: {data.recommendation}</h3>
+        </div>
+      )}
 
-          <p>History points: {history.length}</p>
+      {/* 📈 CHART */}
+      <div
+        style={{
+          width: "700px",
+          maxWidth: "100%",
+          height: "400px",
+          marginTop: 20,
+          background: darkMode ? "#222" : "#fff",
+          padding: 20,
+          borderRadius: 10,
+        }}
+      >
+        {history.length > 0 ? (
+          <Line data={chartData} />
+        ) : (
+          <p>No chart data available</p>
+        )}
+      </div>
 
-<div
-  style={{
-    width: "700px",
-    height: "400px",
-    marginTop: 20,
-    background: darkMode ? "#222" : "#fff",
-    padding: 20,
-    borderRadius: 10,
-  }}
->
-  {history.length > 0 ? (
-    <Line data={chartData} />
-  ) : (
-    <p>No chart data available</p>
-  )}
-
-  {/* SEO block BELOW chart */}
-  <div style={{ marginTop: 20 }}>
-    <h2>Real-Time Stock Market Data</h2>
-    <p>
-      This dashboard provides live stock prices, historical charts, and market
-      insights for companies like Apple, Tesla, Microsoft, and Google.
-    </p>
-  </div>
-</div>
-
+      {/* ⭐ WATCHLIST */}
       <div style={{ marginTop: 30 }}>
-        <h2>⭐ Watchlist</h2>
+        <h2>Watchlist</h2>
         <ul>
           {watchlist.map((item, index) => (
             <li key={index}>{item}</li>
           ))}
         </ul>
+      </div>
+
+      {/* 🔎 SEO CONTENT (IMPORTANT FOR GOOGLE) */}
+      <div style={{ marginTop: 40 }}>
+        <h2>Real-Time Stock Market Data</h2>
+        <p>
+          This dashboard provides live stock prices, historical charts, and
+          real-time market insights for global stocks like Apple, Tesla, and Microsoft.
+        </p>
       </div>
     </div>
   );
