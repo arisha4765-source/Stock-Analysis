@@ -42,16 +42,13 @@ const chartData = {
 
   datasets: [
     {
-      label: `${symbol} Price`,
-      data: [
-        data?.price - 5,
-        data?.price - 3,
-        data?.price - 1,
-        data?.price,
-        data?.price + 2,
-        data?.price + 1,
-        data?.price + 4
-      ],
+      label: `${symbol} Trend`,
+
+      data: Array.from({ length: 7 }, () =>
+        Math.floor(
+          data.price + (Math.random() * 20 - 10)
+        )
+      ),
 
       borderColor: "rgb(75, 192, 192)",
       backgroundColor: "rgba(75, 192, 192, 0.2)",
