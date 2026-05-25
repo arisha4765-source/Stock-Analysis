@@ -111,7 +111,42 @@ const chartData = {
       {data.recommendation}
     </h3>
 
-    HERE_GOES_THE_NEW_GRAPH_BLOCK
+    <div
+      style={{
+        width: "700px",
+        maxWidth: "100%",
+        marginTop: "20px",
+        background: "#fff",
+        padding: "20px",
+        borderRadius: "10px"
+      }}
+    >
+      <Line
+        data={chartData}
+        options={{
+          responsive: true,
+          plugins: {
+            legend: {
+              labels: {
+                color: "#000"
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                color: "#000"
+              }
+            },
+            y: {
+              ticks: {
+                color: "#000"
+              }
+            }
+          }
+        }}
+      />
+    </div>
   </div>
 )}
       <div style={{ marginTop: 30 }}>
