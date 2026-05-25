@@ -21,7 +21,7 @@ app.get("/api/stock/:symbol", async (req, res) => {
     const symbol = req.params.symbol.toUpperCase();
 
     const response = await axios.get(
-      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=JXFCCD9KINZJ41OU`
+      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=AVY4DFUEKWVFZP9I`
     );
 
     console.log(response.data);
