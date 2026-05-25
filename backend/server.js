@@ -17,7 +17,47 @@ app.get("/", (req, res) => {
   res.send("Backend running");
 });
 
-app.get("/api/stock/:symbol", (req, res) => {
+app.get("const axios = require("axios");
+
+app.get("/api/stock/:symbol", async (req, res) => {
+  try {
+    const symbol = req.params.symbol.toUpperCase();
+
+    const response = await axios.get(
+      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=FSNLQL7LFZGWQARX`
+    );
+
+    const stock = response.data["Global Quote"];
+
+    if (!stock || !stock["05. price"]) {
+      return res.status(404).json({
+        error: "Stock not found"
+      });
+    }
+
+    const price = parseFloat(stock["05. price"]);
+    const change = parseFloat(stock["10. change percent"]);
+
+    let recommendation = "HOLD";
+
+    if (change > 2) recommendation = "STRONG BUY";
+    else if (change > 0) recommendation = "BUY";
+    else if (change < -2) recommendation = "SELL";
+
+    res.json({
+      symbol,
+      price,
+      change,
+      recommendation
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      error: "API error"
+    });
+  }
+});", (req, res) => {
   const symbol = req.params.symbol.toUpperCase();
 
   const randomPrice = (Math.random() * 500 + 50).toFixed(2);
