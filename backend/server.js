@@ -17,6 +17,26 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/stock/:symbol", (req, res) => {
+  const symbol = req.params.symbol.toUpperCase();
+
+  const randomPrice = (Math.random() * 500 + 50).toFixed(2);
+
+  const recommendations = [
+    "BUY",
+    "SELL",
+    "HOLD",
+    "STRONG BUY"
+  ];
+
+  const randomRecommendation =
+    recommendations[Math.floor(Math.random() * recommendations.length)];
+
+  res.json({
+    symbol,
+    recommendation: randomRecommendation,
+    prediction: randomPrice
+  });
+});) => {
   const symbol = req.params.symbol;
 
   res.json({
