@@ -55,15 +55,19 @@ app.get("/api/history/:symbol", async (req, res) => {
     const symbol = req.params.symbol.toUpperCase();
 
     const now = Math.floor(Date.now() / 1000);
-    const oneWeekAgo = now - 60 * 60 * 24 * 7;
+    const oneMonthAgo = now - 60 * 60 * 24 * 30; // IMPORTANT: use 1 month (not 1 week)
 
     const response = await axios.get(
-      `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${oneWeekAgo}&to=${now}&token=d8a10g9r01qhv1uvp210d8a10g9r01qhv1uvp21g`
+      `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${oneMonthAgo}&to=${now}&token=d8a10g9r01qhv1uvp210d8a10g9r01qhv1uvp21g`
     );
 
-    if (response.data.s !== "ok") {
-      return res.status(400).json({
-        error: "No chart data",
+    console.log("FINNHUB RESPONSE:", response.data);
+
+    // 🚨 IMPORTANT CHECK
+    if (response.data.s !== "ok" || !response.data.c) {
+      return res.json({
+        c: [],
+        error: "No data from Finnhub",
         raw: response.data,
       });
     }
@@ -75,7 +79,11 @@ app.get("/api/history/:symbol", async (req, res) => {
 
   } catch (err) {
     console.error("HISTORY ERROR:", err.message);
-    res.status(500).json({ error: "History API error" });
+
+    res.json({
+      c: [],
+      error: "API failure",
+    });
   }
 });
 
