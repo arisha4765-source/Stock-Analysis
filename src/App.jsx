@@ -41,7 +41,16 @@ export default function App() {
         "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
       );
 
-      setHistory(historyRes.data?.c || []);
+      // 🔥 Robust fix: handles multiple backend response formats
+      const raw = historyRes.data;
+
+      console.log("RAW HISTORY RESPONSE:", raw);
+
+      const parsedHistory = Array.isArray(raw)
+        ? raw
+        : raw?.c || raw?.prices || raw?.history || [];
+
+      setHistory(parsedHistory);
     } catch (err) {
       console.error(err);
       alert("Error fetching stock data");
@@ -111,9 +120,7 @@ export default function App() {
       <button onClick={fetchStock}>Analyze</button>
 
       <button
-        onClick={() =>
-          setWatchlist([...watchlist, symbol])
-        }
+        onClick={() => setWatchlist([...watchlist, symbol])}
       >
         Add to Watchlist
       </button>
@@ -125,17 +132,24 @@ export default function App() {
           <h3>Change: {data.change}%</h3>
           <h3>Recommendation: {data.recommendation}</h3>
 
+          <p>History points: {history.length}</p>
+
           <div
             style={{
               width: "700px",
               maxWidth: "100%",
+              height: "400px",
               marginTop: "20px",
               background: darkMode ? "#222" : "#fff",
               padding: "20px",
               borderRadius: "10px",
             }}
           >
-            <Line data={chartData} options={chartOptions} />
+            {history.length > 0 ? (
+              <Line data={chartData} options={chartOptions} />
+            ) : (
+              <p>No chart data available</p>
+            )}
           </div>
         </div>
       )}
