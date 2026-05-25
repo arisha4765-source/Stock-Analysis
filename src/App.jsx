@@ -31,12 +31,12 @@ export default function App() {
       <button onClick={fetchStock}>Analyze</button>
 
       {data && (
-        <div style={{ marginTop: 20 }}>
-          <h2>{data.symbol}</h2>
-          <h3>Recommendation: {data.recommendation}</h3>
-          <h3>Prediction: {data.prediction}</h3>
-        </div>
-      )}
-    </div>
-  );
-}
+  <div style={{ marginTop: 20 }}>
+    <h2>{data.symbol}</h2>
+    <h3>Current Price: ${data.currentPrice}</h3>
+    <h3>Predicted Price: ${data.predictedPrice}</h3>
+    <h3>Recommendation: {data.recommendation}</h3>
+  </div>
+)
+      }
+      
