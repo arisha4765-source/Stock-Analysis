@@ -39,13 +39,13 @@ app.get("/api/history/:symbol", async (req, res) => {
     );
 
     res.json(response.data);
-  } catch (err) {
-    console.error(err);
-
-    res.status(500).json({
-      error: "History API error"
-    });
-  }
+catch (err) {
+  console.log("HISTORY ERROR:", err.response?.data || err.message);
+  res.status(500).json({
+    error: "History API error",
+    details: err.message
+  });
+}
 });
     const stock = response.data;
 
