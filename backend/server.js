@@ -54,28 +54,33 @@ app.get("/api/history/:symbol", async (req, res) => {
   try {
     const symbol = req.params.symbol.toUpperCase();
 
-    const now = Math.floor(Date.now() / 1000);
+    const to = Math.floor(Date.now() / 1000);
+    const from = to - 60 * 60 * 24 * 30; // 30 days (safe range)
 
-    // ✅ FIX: use 6 MONTHS instead of 7 days
-    const sixMonthsAgo = now - 60 * 60 * 24 * 180;
+    const url =
+      `https://finnhub.io/api/v1/stock/candle` +
+      `?symbol=${symbol}` +
+      `&resolution=D` +
+      `&from=${from}` +
+      `&to=${to}` +
+      `&token=d8a10g9r01qhv1uvp210d8a10g9r01qhv1uvp21g`;
 
-    const response = await axios.get(
-      `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${sixMonthsAgo}&to=${now}&token=d8a10g9r01qhv1uvp210d8a10g9r01qhv1uvp21g`
-    );
+    const response = await axios.get(url);
 
-    console.log("FINNHUB RESPONSE:", response.data);
+    console.log("FINNHUB RAW:", response.data);
 
-    if (response.data.s !== "ok") {
+    // ✅ STRICT CHECK
+    if (!response.data || response.data.s !== "ok") {
       return res.json({
         c: [],
-        error: "Finnhub returned no data",
+        error: "Finnhub returned no usable data",
         raw: response.data,
       });
     }
 
     return res.json({
-      c: response.data.c || [],
-      t: response.data.t || [],
+      c: response.data.c,
+      t: response.data.t,
     });
 
   } catch (err) {
