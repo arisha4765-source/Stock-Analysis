@@ -137,32 +137,31 @@ setHistory(Array.isArray(historyRes.data?.c) ? historyRes.data.c : []);
 
           <p>History points: {history.length}</p>
 
-          <div
-            style={{
-              width: "700px",
-              maxWidth: "100%",
-              height: "400px",
-              marginTop: "20px",
-              background: darkMode ? "#222" : "#fff",
-              padding: "20px",
-              borderRadius: "10px",
-            }}
-          >
-            {history.length > 0 ? (
-              <Line data={chartData} options={chartOptions} />
-            ) : (
-              <p>No chart data available</p>
-            <div style={{ marginTop: 20 }}>
-  <h2>Real-Time Stock Market Data</h2>
-  <p>
-    This dashboard provides live stock prices, historical charts, and market
-    insights for companies like Apple, Tesla, Microsoft, and Google.
-  </p>
+<div
+  style={{
+    width: "700px",
+    height: "400px",
+    marginTop: 20,
+    background: darkMode ? "#222" : "#fff",
+    padding: 20,
+    borderRadius: 10,
+  }}
+>
+  {history.length > 0 ? (
+    <Line data={chartData} />
+  ) : (
+    <p>No chart data available</p>
+  )}
+
+  {/* SEO block BELOW chart */}
+  <div style={{ marginTop: 20 }}>
+    <h2>Real-Time Stock Market Data</h2>
+    <p>
+      This dashboard provides live stock prices, historical charts, and market
+      insights for companies like Apple, Tesla, Microsoft, and Google.
+    </p>
+  </div>
 </div>
-            )}
-          </div>
-        </div>
-      )}
 
       <div style={{ marginTop: 30 }}>
         <h2>⭐ Watchlist</h2>
