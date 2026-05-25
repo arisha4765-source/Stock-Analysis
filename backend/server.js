@@ -5,7 +5,11 @@ const WebSocket = require("ws");
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://stock-analysis-1-1mhd.onrender.com"
+  })
+);
 app.use(express.json());
 
 app.get("/", (req, res) => {
