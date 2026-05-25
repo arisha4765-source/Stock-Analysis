@@ -38,11 +38,12 @@ export default function App() {
       setData(stockRes.data);
 
       const historyRes = await axios.get(
-        "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
-      );
+  "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
+);
 
-      console.log("HISTORY RESPONSE:", historyRes.data);
-      console.log("history length:", history.length);
+console.log("HISTORY RESPONSE:", historyRes.data);
+
+setHistory(Array.isArray(historyRes.data?.c) ? historyRes.data.c : []);
 
       // ✅ Finnhub candle data is inside "c"
       const prices = historyRes.data?.c;
