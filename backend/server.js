@@ -23,7 +23,7 @@ app.get("/api/stock/:symbol", async (req, res) => {
       req.params.symbol.toUpperCase();
 
     const response = await axios.get(
-      `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=YOUR_FINNHUB_KEY`
+      `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=d8a10g9r01qhv1uvp210d8a10g9r01qhv1uvp21g`
     );
 
     const stock = response.data;
