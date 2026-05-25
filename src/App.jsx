@@ -6,17 +6,12 @@ import {
   CategoryScale,
   LinearScale,
   PointElement,
-  LineElement
+  LineElement,
 } from "chart.js";
 
 import { Line } from "react-chartjs-2";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
 
 export default function App() {
   const [symbol, setSymbol] = useState("");
@@ -25,47 +20,37 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [history, setHistory] = useState([]);
 
-const fetchStock = async () => {
-  try {
-    const stockRes = await axios.get(
-      "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
-    );
+  const fetchStock = async () => {
+    try {
+      const stockRes = await axios.get(
+        "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
+      );
 
-    setData(stockRes.data);
+      setData(stockRes.data);
 
-    const historyRes = await axios.get(
-      "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
-    );
+      const historyRes = await axios.get(
+        "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
+      );
 
-    setHistory(historyRes.data.c);
-  } catch (err) {
-    console.error(err);
-    alert("Error fetching stock data");
-  }
-};
-      setData(res.data);
+      setHistory(historyRes.data.c);
     } catch (err) {
       console.error(err);
       alert("Error fetching stock data");
     }
   };
 
-const chartData = {
-  labels: history.map((_, i) => i + 1),
-
-  datasets: [
-    {
-      label: `${symbol} Real Price History`,
-      data: history,
-
-      borderColor: "rgb(75, 192, 192)",
-      backgroundColor:
-        "rgba(75, 192, 192, 0.2)",
-
-      tension: 0.4
-    }
-  ]
-};
+  const chartData = {
+    labels: history.map((_, i) => i + 1),
+    datasets: [
+      {
+        label: `${symbol} Real Price History`,
+        data: history,
+        borderColor: "rgb(75, 192, 192)",
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        tension: 0.4,
+      },
+    ],
+  };
 
   return (
     <div
@@ -73,7 +58,7 @@ const chartData = {
         padding: 30,
         background: darkMode ? "#111" : "#fff",
         color: darkMode ? "#fff" : "#000",
-        minHeight: "100vh"
+        minHeight: "100vh",
       }}
     >
       <h1>📈 Live Stock Analyzer</h1>
@@ -91,52 +76,38 @@ const chartData = {
         onChange={(e) => setSymbol(e.target.value)}
       />
 
-      <button onClick={fetchStock}>
-        Analyze
-      </button>
+      <button onClick={fetchStock}>Analyze</button>
 
       <button
-        onClick={() =>
-          setWatchlist([...watchlist, symbol])
-        }
+        onClick={() => setWatchlist([...watchlist, symbol])}
       >
         Add to Watchlist
       </button>
 
       {data && (
-  <div style={{ marginTop: 20 }}>
-    <h2>{data.symbol}</h2>
+        <div style={{ marginTop: 20 }}>
+          <h2>{data.symbol}</h2>
+          <h3>Price: ${data.price}</h3>
+          <h3>Change: {data.change}%</h3>
+          <h3>Recommendation: {data.recommendation}</h3>
 
-    <h3>Price: ${data.price}</h3>
+          <div
+            style={{
+              width: "700px",
+              maxWidth: "100%",
+              marginTop: "20px",
+              background: "#fff",
+              padding: "20px",
+              borderRadius: "10px",
+            }}
+          >
+            <Line data={chartData} options={{ responsive: true }} />
+          </div>
+        </div>
+      )}
 
-    <h3>Change: {data.change}%</h3>
-
-    <h3>
-      Recommendation: {data.recommendation}
-    </h3>
-
-    <div
-      style={{
-        width: "700px",
-        maxWidth: "100%",
-        marginTop: "20px",
-        background: "#fff",
-        padding: "20px",
-        borderRadius: "10px"
-      }}
-    >
-      <Line
-        data={chartData}
-        options={{
-          responsive: true
-        }}
-      />
-    </div>
-  </div>
-)}
       <div style={{ marginTop: 30 }}>
         <h2>⭐ Watchlist</h2>
-
         <ul>
           {watchlist.map((item, index) => (
             <li key={index}>{item}</li>
@@ -145,4 +116,4 @@ const chartData = {
       </div>
     </div>
   );
-} 
+}
