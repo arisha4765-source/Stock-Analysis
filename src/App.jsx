@@ -7,11 +7,20 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  Tooltip,
+  Legend,
 } from "chart.js";
 
 import { Line } from "react-chartjs-2";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Legend
+);
 
 export default function App() {
   const [symbol, setSymbol] = useState("");
@@ -32,7 +41,7 @@ export default function App() {
         "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
       );
 
-      setHistory(historyRes.data.c);
+      setHistory(historyRes.data?.c || []);
     } catch (err) {
       console.error(err);
       alert("Error fetching stock data");
@@ -43,13 +52,36 @@ export default function App() {
     labels: history.map((_, i) => i + 1),
     datasets: [
       {
-        label: `${symbol} Real Price History`,
+        label: `${symbol} Price History`,
         data: history,
         borderColor: "rgb(75, 192, 192)",
         backgroundColor: "rgba(75, 192, 192, 0.2)",
         tension: 0.4,
       },
     ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        labels: {
+          color: darkMode ? "#fff" : "#000",
+        },
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: darkMode ? "#fff" : "#000",
+        },
+      },
+      y: {
+        ticks: {
+          color: darkMode ? "#fff" : "#000",
+        },
+      },
+    },
   };
 
   return (
@@ -79,7 +111,9 @@ export default function App() {
       <button onClick={fetchStock}>Analyze</button>
 
       <button
-        onClick={() => setWatchlist([...watchlist, symbol])}
+        onClick={() =>
+          setWatchlist([...watchlist, symbol])
+        }
       >
         Add to Watchlist
       </button>
@@ -96,12 +130,12 @@ export default function App() {
               width: "700px",
               maxWidth: "100%",
               marginTop: "20px",
-              background: "#fff",
+              background: darkMode ? "#222" : "#fff",
               padding: "20px",
               borderRadius: "10px",
             }}
           >
-            <Line data={chartData} options={{ responsive: true }} />
+            <Line data={chartData} options={chartOptions} />
           </div>
         </div>
       )}
