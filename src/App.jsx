@@ -152,6 +152,13 @@ setHistory(Array.isArray(historyRes.data?.c) ? historyRes.data.c : []);
               <Line data={chartData} options={chartOptions} />
             ) : (
               <p>No chart data available</p>
+            <div style={{ marginTop: 20 }}>
+  <h2>Real-Time Stock Market Data</h2>
+  <p>
+    This dashboard provides live stock prices, historical charts, and market
+    insights for companies like Apple, Tesla, Microsoft, and Google.
+  </p>
+</div>
             )}
           </div>
         </div>
