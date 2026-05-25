@@ -41,14 +41,23 @@ export default function App() {
         "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
       );
 
-      // 🔥 Robust fix: handles multiple backend response formats
       const raw = historyRes.data;
 
       console.log("RAW HISTORY RESPONSE:", raw);
 
-      const parsedHistory = Array.isArray(raw)
-        ? raw
-        : raw?.c || raw?.prices || raw?.history || [];
+      let parsedHistory = [];
+
+      if (Array.isArray(raw)) {
+        parsedHistory = raw;
+      } else if (Array.isArray(raw?.c)) {
+        parsedHistory = raw.c;
+      } else if (Array.isArray(raw?.data?.c)) {
+        parsedHistory = raw.data.c;
+      } else if (Array.isArray(raw?.prices)) {
+        parsedHistory = raw.prices;
+      } else if (Array.isArray(raw?.result)) {
+        parsedHistory = raw.result;
+      }
 
       setHistory(parsedHistory);
     } catch (err) {
