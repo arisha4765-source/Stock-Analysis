@@ -8,12 +8,12 @@ export default function App() {
   const fetchStock = async () => {
     try {
       const res = await axios.get(
-        "https://stock-analysis-81hr.onrender.com/" + symbol
+        "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
       );
 
       setData(res.data);
     } catch (err) {
-      console.log(err);
+      console.error(err);
       alert("Error fetching stock data");
     }
   };
@@ -39,4 +39,5 @@ export default function App() {
       )}
     </div>
   );
+}
 }
