@@ -37,15 +37,28 @@ export default function App() {
     }
   };
 
-  const chartData = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-    datasets: [
-      {
-        label: symbol,
-        data: [120, 140, 135, 170, 160]
-      }
-    ]
-  };
+const chartData = {
+  labels: ["1", "2", "3", "4", "5", "6", "7"],
+
+  datasets: [
+    {
+      label: `${symbol} Price`,
+      data: [
+        data?.price - 5,
+        data?.price - 3,
+        data?.price - 1,
+        data?.price,
+        data?.price + 2,
+        data?.price + 1,
+        data?.price + 4
+      ],
+
+      borderColor: "rgb(75, 192, 192)",
+      backgroundColor: "rgba(75, 192, 192, 0.2)",
+      tension: 0.4
+    }
+  ]
+};
 
   return (
     <div
