@@ -4,31 +4,34 @@ import axios from "axios";
 export default function App() {
   const [symbol, setSymbol] = useState("");
   const [data, setData] = useState(null);
+  const [history, setHistory] = useState([]);
 
   const [question, setQuestion] = useState("");
   const [aiAnswer, setAiAnswer] = useState("");
 
-  // ================= STOCK =================
- const fetchStock = async () => {
-  const res = await axios.get(
-    "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
-  );
+  // ---------------- STOCK ----------------
+  const fetchStock = async () => {
+    const res = await axios.get(
+      "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
+    );
 
-  setData(res.data);
+    setData(res.data);
 
-  const historyRes = await axios.get(
-    "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
-  );
+    const h = await axios.get(
+      "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
+    );
 
-  setHistory(historyRes.data.prices || []);
-};
-  // ================= AI =================
+    setHistory(h.data.prices);
+  };
+
+  // ---------------- AI ----------------
   const askAI = async () => {
     const res = await axios.post(
       "https://stock-analysis-81hr.onrender.com/api/ai",
       {
-        symbol: data?.symbol,
-        price: data?.price,
+        symbol: data.symbol,
+        price: data.price,
+        history,
         question,
       }
     );
@@ -38,16 +41,16 @@ export default function App() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>Stock AI Dashboard</h1>
+      <h1>📊 Stock AI Dashboard</h1>
 
-      {/* SEARCH */}
+      {/* INPUT */}
       <input
-        placeholder="Stock symbol"
+        placeholder="Enter stock (TCS, AAPL, INFY)"
         onChange={(e) => setSymbol(e.target.value)}
       />
       <button onClick={fetchStock}>Search</button>
 
-      {/* STOCK DATA */}
+      {/* STOCK INFO */}
       {data && (
         <div>
           <h2>{data.symbol}</h2>
@@ -55,12 +58,22 @@ export default function App() {
         </div>
       )}
 
+      {/* CHART */}
+      {history.length > 0 && (
+        <div>
+          <h3>📈 Chart Data</h3>
+          {history.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+        </div>
+      )}
+
       {/* AI */}
       <div style={{ marginTop: 20 }}>
-        <h3>AI Assistant</h3>
+        <h3>🤖 AI Assistant</h3>
 
         <textarea
-          placeholder="Ask question"
+          placeholder="Ask (buy/sell/hold?)"
           onChange={(e) => setQuestion(e.target.value)}
         />
 
