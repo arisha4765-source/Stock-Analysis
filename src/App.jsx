@@ -4,7 +4,8 @@ import React, {
 } from "react";
 
 import axios from "axios";
-
+import supabase
+from "./supabase";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -75,6 +76,15 @@ export default function App() {
 
 const [aiAnswer, setAiAnswer] =
   useState("");
+
+  const [email, setEmail] =
+  useState("");
+
+const [password, setPassword] =
+  useState("");
+
+const [loggedIn, setLoggedIn] =
+  useState(false);
 
   // 🔹 RSI FUNCTION
   const calculateRSI = (
@@ -164,6 +174,50 @@ const [aiAnswer, setAiAnswer] =
 
     setAiAnswer(
       "AI failed."
+    );
+  }
+};
+
+  const signup = async () => {
+
+  const { error } =
+    await supabase.auth.signUp({
+
+      email,
+      password,
+    });
+
+  if (error) {
+
+    alert(error.message);
+
+  } else {
+
+    alert(
+      "Signup successful"
+    );
+  }
+};
+
+const login = async () => {
+
+  const { error } =
+    await supabase.auth.signInWithPassword({
+
+      email,
+      password,
+    });
+
+  if (error) {
+
+    alert(error.message);
+
+  } else {
+
+    setLoggedIn(true);
+
+    alert(
+      "Login successful"
     );
   }
 };
@@ -495,7 +549,68 @@ const [aiAnswer, setAiAnswer] =
       <h1>
         📈 Live Stock Analyzer
       </h1>
+<div
+  style={{
+    marginBottom: 30,
+  }}
+>
 
+  <h2>
+    👤 Account
+  </h2>
+
+  <input
+    type="email"
+    placeholder="Email"
+    value={email}
+    onChange={(e) =>
+      setEmail(
+        e.target.value
+      )
+    }
+  />
+
+  <br />
+  <br />
+
+  <input
+    type="password"
+    placeholder="Password"
+    value={password}
+    onChange={(e) =>
+      setPassword(
+        e.target.value
+      )
+    }
+  />
+
+  <br />
+  <br />
+
+  <button
+    onClick={signup}
+  >
+    Sign Up
+  </button>
+
+  <button
+    onClick={login}
+    style={{
+      marginLeft: 10,
+    }}
+  >
+    Login
+  </button>
+
+  {loggedIn && (
+
+    <p>
+      ✅ Logged In
+    </p>
+
+  )}
+
+</div>
       <button
         onClick={() =>
           setDarkMode(
