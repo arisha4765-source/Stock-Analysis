@@ -1,7 +1,6 @@
-import { supabase } from "./supabase";
-import { useEffect } from "react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { supabase } from "./supabase";
 import {
   LineChart,
   Line,
@@ -10,95 +9,40 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+
 export default function App() {
+  // ---------------- STOCK STATE ----------------
   const [symbol, setSymbol] = useState("");
   const [data, setData] = useState(null);
-  const [history, setHistory] = ([]);
+  const [history, setHistory] = useState([]);
+
+  // ---------------- AI STATE ----------------
   const [question, setQuestion] = useState("");
   const [aiAnswer, setAiAnswer] = useState("");
+
+  // ---------------- AUTH STATE ----------------
   const [user, setUser] = useState(null);
-const [email, setEmail] = useState("");
-const [password, setPassword] = useState("");
-const [watchlist, setWatchlist] = useState([]);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const signUp = async () => {
-  await supabase.auth.signUp({
-    email,
-    password,
-  });
-};
+  // ---------------- WATCHLIST ----------------
+  const [watchlist, setWatchlist] = useState([]);
 
-const signIn = async () => {
-  const { data } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  setUser(data.user);
-};
+  // ================= AUTH SESSION =================
   useEffect(() => {
-  supabase.auth.getUser().then(({ data }) => {
-    setUser(data.user);
-  });
-}, []);
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+  }, []);
 
-  const addToWatchlist = async (symbol) => {
-  await supabase.from("watchlist").insert([
-    {
-      user_id: user.id,
-      symbol,
-    },
-  ]);
-    {!user ? (
-  <div>
-    <h2>Login</h2>
-
-    <input placeholder="email" onChange={(e) => setEmail(e.target.value)} />
-    <input placeholder="password" type="password" onChange={(e) => setPassword(e.target.value)} />
-
-    <button onClick={signIn}>Login</button>
-    <button onClick={signUp}>Sign Up</button>
-  </div>
-) : (
-
-  loadWatchlist();
-};
-
-  const loadWatchlist = async () => {
-  const { data } = await supabase
-    .from("watchlist")
-    .select("*")
-    .eq("user_id", user.id);
-
-  setWatchlist(data);
-};
-
+  // ================= LOAD WATCHLIST (FIXED) =================
   useEffect(() => {
-  if (user) loadWatchlist();
-}, [user]);
-<div>
-  <h3>⭐ Watchlist</h3>
+    if (user) {
+      loadWatchlist();
+    }
+  }, [user]);
 
-  {watchlist.map((item) => (
-    <p key={item.id}>{item.symbol}</p>
-  ))}
-
-  <button onClick={() => addToWatchlist(symbol)}>
-    + Add Current Stock
-  </button>
-</div>
-  const parseSignal = (text) => {
-  if (!text) return "⚪ UNKNOWN";
-
-  const lower = text.toLowerCase();
-
-  if (lower.includes("buy")) return "🟢 BUY";
-  if (lower.includes("sell")) return "🔴 SELL";
-  if (lower.includes("hold")) return "🟡 HOLD";
-
-  return "⚪ UNKNOWN";
-};
-  // ---------------- FETCH STOCK ----------------
+  // ================= STOCK FETCH =================
   const fetchStock = async () => {
     const res = await axios.get(
       "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
@@ -118,52 +62,112 @@ const signIn = async () => {
     );
   };
 
-  // ---------------- AI ----------------
- const askAI = async () => {
-  const res = await axios.post(
-    "https://stock-analysis-81hr.onrender.com/api/ai",
-    {
-      symbol: data.symbol,
-      price: data.price,
-      history: history.map((h) => h.price),
-      question,
-    }
-  );
+  // ================= AI =================
+  const askAI = async () => {
+    const res = await axios.post(
+      "https://stock-analysis-81hr.onrender.com/api/ai",
+      {
+        symbol: data?.symbol,
+        price: data?.price,
+        history: history.map((h) => h.price),
+        question,
+      }
+    );
 
-  setAiAnswer(res.data.analysis);
-};
- <h3>Signal: {parseSignal(aiAnswer)}</h3>
-<pre style={{ whiteSpace: "pre-wrap" }}>{aiAnswer}</pre>
+    setAiAnswer(res.data.analysis);
+  };
+
+  // ================= LOGIN =================
+  const signUp = async () => {
+    await supabase.auth.signUp({ email, password });
+  };
+
+  const signIn = async () => {
+    const { data } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    setUser(data.user);
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  // ================= WATCHLIST =================
+  const loadWatchlist = async () => {
+    const { data } = await supabase
+      .from("watchlist")
+      .select("*")
+      .eq("user_id", user.id);
+
+    setWatchlist(data || []);
+  };
+
+  const addToWatchlist = async () => {
+    if (!user || !data?.symbol) return;
+
+    await supabase.from("watchlist").insert([
+      {
+        user_id: user.id,
+        symbol: data.symbol,
+      },
+    ]);
+
+    loadWatchlist();
+  };
+
+  // ================= UI =================
   return (
-    <div style={{ display: "flex", height: "100vh", background: "#0f0f0f", color: "white" }}>
+    <div style={{ display: "flex", height: "100vh" }}>
+      {/* LEFT PANEL */}
+      <div style={{ width: 250, padding: 10, background: "#111", color: "#fff" }}>
+        <h3>Stock AI</h3>
 
-      {/* SIDEBAR */}
-      <div style={{ marginTop: 20, padding: 10, background: "#222" }}>
-  <h3>🤖 AI Trading Signal</h3>
-  <pre style={{ whiteSpace: "pre-wrap" }}>{aiAnswer}</pre>
-</div>
+        {/* LOGIN */}
+        {!user ? (
+          <div>
+            <input
+              placeholder="email"
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <input
+              placeholder="password"
+              type="password"
+              onChange={(e) => setPassword(e.target.value)}
+            />
 
-        <input
-          placeholder="Enter stock (TCS, AAPL)"
-          style={{ width: "100%", padding: 8 }}
-          onChange={(e) => setSymbol(e.target.value)}
-        />
-
-        <button onClick={fetchStock} style={{ width: "100%", marginTop: 10 }}>
-          Search
-        </button>
-
-        {data && (
-          <div style={{ marginTop: 20 }}>
-            <h3>{data.symbol}</h3>
-            <p>Price: {data.price}</p>
+            <button onClick={signIn}>Login</button>
+            <button onClick={signUp}>Signup</button>
+          </div>
+        ) : (
+          <div>
+            <p>Logged in</p>
+            <button onClick={signOut}>Logout</button>
           </div>
         )}
+
+        {/* SEARCH */}
+        <input
+          placeholder="Stock"
+          onChange={(e) => setSymbol(e.target.value)}
+        />
+        <button onClick={fetchStock}>Search</button>
+
+        {/* WATCHLIST */}
+        <h4>Watchlist</h4>
+        {watchlist.map((w) => (
+          <p key={w.id}>{w.symbol}</p>
+        ))}
+
+        <button onClick={addToWatchlist}>+ Add</button>
       </div>
 
-      {/* MAIN CHART AREA */}
+      {/* CENTER CHART */}
       <div style={{ flex: 1, padding: 20 }}>
-        <h2>Market Chart</h2>
+        <h2>{data?.symbol}</h2>
 
         {history.length > 0 && (
           <ResponsiveContainer width="100%" height={400}>
@@ -177,24 +181,18 @@ const signIn = async () => {
         )}
       </div>
 
-      {/* AI PANEL */}
-      <div style={{ width: 320, padding: 20, background: "#111" }}>
-        <h3>🤖 AI Analyst</h3>
+      {/* RIGHT AI PANEL */}
+      <div style={{ width: 300, padding: 10, background: "#111", color: "#fff" }}>
+        <h3>AI Analyst</h3>
 
         <textarea
           style={{ width: "100%", height: 100 }}
-          placeholder="Ask: Buy or Sell?"
           onChange={(e) => setQuestion(e.target.value)}
         />
 
-        <button onClick={askAI} style={{ width: "100%", marginTop: 10 }}>
-          Ask AI
-        </button>
+        <button onClick={askAI}>Ask AI</button>
 
-        <div style={{ marginTop: 20 }}>
-          <b>AI Response:</b>
-          <p>{aiAnswer}</p>
-        </div>
+        <pre style={{ whiteSpace: "pre-wrap" }}>{aiAnswer}</pre>
       </div>
     </div>
   );
