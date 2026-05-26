@@ -134,7 +134,7 @@ export default function App() {
     const interval =
       setInterval(() => {
         fetchStock(false);
-      }, 30000);
+      }, 60000);
 
     return () =>
       clearInterval(interval);
