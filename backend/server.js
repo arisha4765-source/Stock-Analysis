@@ -222,7 +222,44 @@ app.get("/api/history/:symbol", async (req, res) => {
     });
   }
 });
+// 📰 STOCK NEWS API
+app.get("/api/news/:symbol", async (req, res) => {
 
+  try {
+
+    const symbol =
+      req.params.symbol.toUpperCase();
+
+    const response =
+      await axios.get(
+        "https://newsapi.org/v2/everything",
+        {
+          params: {
+            q: symbol,
+            sortBy: "publishedAt",
+            language: "en",
+            apiKey:
+              "32b728293279410ea435230977dec2e3",
+          },
+        }
+      );
+
+    res.json(
+      response.data.articles
+    );
+
+  } catch (err) {
+
+    console.error(
+      err.message
+    );
+
+    res.status(500).json({
+      error:
+        "32b728293279410ea435230977dec2e3",
+    });
+  }
+});
 const PORT =
   process.env.PORT || 5000;
 
