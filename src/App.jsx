@@ -38,6 +38,11 @@ export default function App() {
 
   const [history, setHistory] =
     useState([]);
+  const [alertPrice, setAlertPrice] =
+  useState("");
+
+const [alerts, setAlerts] =
+  useState([]);
 
   const [watchlist, setWatchlist] =
     useState([]);
@@ -134,6 +139,23 @@ export default function App() {
     const interval =
       setInterval(() => {
         fetchStock(false);
+        // 🔔 CHECK ALERTS
+alerts.forEach((item) => {
+
+  if (
+    data &&
+    data.symbol.includes(
+      item.symbol
+    ) &&
+    Number(data.price) >=
+      item.target
+  ) {
+
+    alert(
+      `${item.symbol} hit ₹${item.target}!`
+    );
+  }
+});
       }, 60000);
 
     return () =>
@@ -227,6 +249,47 @@ export default function App() {
         Add to Watchlist
       </button>
 
+      <br />
+<br />
+
+<input
+  type="number"
+  placeholder="Alert Price"
+  value={alertPrice}
+  onChange={(e) =>
+    setAlertPrice(e.target.value)
+  }
+/>
+
+<button
+  onClick={() => {
+
+    if (!symbol || !alertPrice)
+      return;
+
+    const newAlert = {
+      symbol:
+        symbol.toUpperCase(),
+
+      target:
+        Number(alertPrice),
+    };
+
+    setAlerts([
+      ...alerts,
+      newAlert,
+    ]);
+
+    alert(
+      `Alert set for ${symbol} at ₹${alertPrice}`
+    );
+
+    setAlertPrice("");
+  }}
+>
+  Set Alert
+</button>
+
       {/* 📊 RESULTS */}
       {data && (
 
@@ -313,7 +376,24 @@ export default function App() {
         <h2>
           ⭐ Watchlist
         </h2>
+<div style={{ marginTop: 30 }}>
 
+  <h2>🔔 Alerts</h2>
+
+  <ul>
+    {alerts.map(
+      (item, index) => (
+        <li key={index}>
+          {item.symbol}
+          {" "}
+          → ₹
+          {item.target}
+        </li>
+      )
+    )}
+  </ul>
+
+</div>
         <ul>
           {watchlist.map(
             (
