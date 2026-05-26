@@ -29,41 +29,64 @@ export default function App() {
   const [watchlist, setWatchlist] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
 
-  // 📈 FETCH STOCK DATA
+  // 🚀 SMART STOCK FETCHER
   const fetchStock = async (loadHistory = false) => {
     try {
       if (!symbol) return;
 
       let formattedSymbol = symbol.trim().toUpperCase();
 
-      // 🇮🇳 Auto-detect Indian stocks
-      const indianStocks = [
-        "RELIANCE",
-        "TCS",
-        "INFY",
-        "SBIN",
-        "ITC",
-        "HDFCBANK",
-        "WIPRO",
-        "ICICIBANK",
-        "LT",
-        "AXISBANK",
-      ];
-
-      // If it's an Indian stock, add :NSE
-      if (
-        indianStocks.includes(formattedSymbol) &&
-        !formattedSymbol.includes(":")
-      ) {
-        formattedSymbol = `${formattedSymbol}:NSE`;
+      // 🇮🇳 Indian indices
+      if (formattedSymbol === "NIFTY") {
+        formattedSymbol = "NIFTY:NSE";
       }
 
-      // 📊 STOCK INFO
-      const stockRes = await axios.get(
-        "https://stock-analysis-81hr.onrender.com/api/stock/" +
-          formattedSymbol
-      );
+      if (formattedSymbol === "SENSEX") {
+        formattedSymbol = "SENSEX:BSE";
+      }
 
+      // ₿ Crypto support
+      if (formattedSymbol === "BTC") {
+        formattedSymbol = "BTC/USD";
+      }
+
+      if (formattedSymbol === "ETH") {
+        formattedSymbol = "ETH/USD";
+      }
+
+      let stockRes;
+
+      // 📈 TRY DEFAULT MARKET FIRST
+      try {
+        stockRes = await axios.get(
+          "https://stock-analysis-81hr.onrender.com/api/stock/" +
+            formattedSymbol
+        );
+
+        if (
+          !stockRes.data ||
+          stockRes.data.price === 0 ||
+          stockRes.data.price === null
+        ) {
+          throw new Error("Retry NSE");
+        }
+
+      } catch (err) {
+
+        // 🇮🇳 Retry as NSE stock
+        if (!formattedSymbol.includes(":")) {
+          formattedSymbol = `${formattedSymbol}:NSE`;
+
+          stockRes = await axios.get(
+            "https://stock-analysis-81hr.onrender.com/api/stock/" +
+              formattedSymbol
+          );
+        } else {
+          throw err;
+        }
+      }
+
+      // ✅ SET STOCK DATA
       setData(stockRes.data);
 
       // 📈 LOAD CHART HISTORY
@@ -79,13 +102,15 @@ export default function App() {
 
         setHistory(cleanData);
       }
+
     } catch (err) {
       console.error(err);
-      alert("Error fetching stock data");
+
+      alert("Stock not found");
     }
   };
 
-  // ⚡ REAL-TIME UPDATE EVERY 5 SECONDS
+  // ⚡ REAL-TIME UPDATES EVERY 5 SECONDS
   useEffect(() => {
     if (!symbol) return;
 
@@ -98,15 +123,19 @@ export default function App() {
     return () => clearInterval(interval);
   }, [symbol]);
 
-  // 📈 CHART CONFIG
+  // 📊 CHART CONFIG
   const chartData = {
     labels: history.map((_, i) => i + 1),
+
     datasets: [
       {
         label: `${symbol.toUpperCase()} Price History`,
         data: history,
+
         borderColor: "rgb(75, 192, 192)",
+
         backgroundColor: "rgba(75, 192, 192, 0.2)",
+
         tension: 0.4,
       },
     ],
@@ -126,7 +155,8 @@ export default function App() {
       <h1>📈 Live Stock Analyzer Dashboard</h1>
 
       <p>
-        Track real-time US & Indian stock prices with live charts and updates.
+        Track real-time US stocks, Indian stocks,
+        crypto, and market indices.
       </p>
 
       {/* THEME BUTTON */}
@@ -137,14 +167,14 @@ export default function App() {
       <br />
       <br />
 
-      {/* SEARCH INPUT */}
+      {/* SEARCH */}
       <input
-        placeholder="Enter Stock Symbol (AAPL, TCS, RELIANCE)"
+        placeholder="AAPL, TCS, BTC, NIFTY..."
         value={symbol}
         onChange={(e) => setSymbol(e.target.value)}
         style={{
           padding: "10px",
-          width: "250px",
+          width: "260px",
           borderRadius: "5px",
           border: "1px solid gray",
         }}
@@ -205,6 +235,7 @@ export default function App() {
             data={chartData}
             options={{
               responsive: true,
+
               plugins: {
                 legend: {
                   labels: {
@@ -212,12 +243,14 @@ export default function App() {
                   },
                 },
               },
+
               scales: {
                 x: {
                   ticks: {
                     color: darkMode ? "#fff" : "#000",
                   },
                 },
+
                 y: {
                   ticks: {
                     color: darkMode ? "#fff" : "#000",
@@ -244,12 +277,14 @@ export default function App() {
 
       {/* SEO CONTENT */}
       <div style={{ marginTop: 40 }}>
-        <h2>Real-Time Stock Market Data</h2>
+        <h2>Real-Time Market Dashboard</h2>
 
         <p>
-          This stock dashboard provides live stock prices, real-time updates,
-          and historical charts for US and Indian stock markets including Apple,
-          Tesla, Reliance, TCS, Infosys, and more.
+          This dashboard provides live stock prices,
+          cryptocurrency tracking, market indices,
+          and historical charts for US and Indian markets
+          including Apple, Tesla, Reliance, TCS,
+          Infosys, Bitcoin, Ethereum, and more.
         </p>
       </div>
     </div>
