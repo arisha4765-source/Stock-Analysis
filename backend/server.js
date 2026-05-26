@@ -9,7 +9,7 @@ app.use(express.json());
 
 // ================= OPENAI =================
 const openai = new OpenAI({
-  apiKey: process.env.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 ,
+  apiKey: process.env.OPENAI_API_KEY ,
 });
 
 // ================= STOCK API (TWELVE DATA) =================
@@ -33,7 +33,7 @@ app.get("/api/stock/:symbol", async (req, res) => {
       "https://api.twelvedata.com/quote?symbol=" +
       symbol +
       "&apikey=" +
-      process.env.aaf7843c99e64f0d8a388c0ad4e736c7;
+      process.env.TWELVE_DATA_API_KEY;
 
     const response = await axios.get(url);
 
@@ -61,7 +61,7 @@ app.get("/api/history/:symbol", async (req, res) => {
       "https://api.twelvedata.com/time_series?symbol=" +
       symbol +
       "&interval=1day&outputsize=30&apikey=" +
-      process.env.aaf7843c99e64f0d8a388c0ad4e736c7;
+      process.env.TWELVE_DATA_API_KEY;
 
     const response = await axios.get(url);
 
