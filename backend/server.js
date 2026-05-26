@@ -1,7 +1,7 @@
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
-const yahooFinance = require("yahoo-finance2").default;
+const yahooFinance = require("yahoo-finance2");
 
 const app = express();
 
