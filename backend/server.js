@@ -8,7 +8,7 @@ app.use(express.json());
 
 // ================= OPENAI =================
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.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 ,
 });
 
 // ================= STOCK (FAKE API SAFE) =================
