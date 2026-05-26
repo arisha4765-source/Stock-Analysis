@@ -1,7 +1,6 @@
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
-const yahooFinance = require("yahoo-finance2");
 
 const app = express();
 
@@ -17,20 +16,24 @@ app.get("/api/stock/:symbol", async (req, res) => {
   try {
     let symbol = req.params.symbol.toUpperCase();
 
-    // 🇮🇳 Indian stocks → Yahoo Finance
+    // 🇮🇳 INDIAN STOCKS USING YAHOO API
     if (symbol.includes(":NSE")) {
 
       const yahooSymbol =
         symbol.replace(":NSE", ".NS");
 
-      const result = await yahooFinance.quote(
-        yahooSymbol
+      const response = await axios.get(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`
       );
 
-      const price = result.regularMarketPrice;
+      const result =
+        response.data.chart.result[0].meta;
+
+      const price =
+        result.regularMarketPrice;
 
       const previous =
-        result.regularMarketPreviousClose;
+        result.previousClose;
 
       const change = (
         ((price - previous) / previous) *
@@ -54,13 +57,13 @@ app.get("/api/stock/:symbol", async (req, res) => {
       });
     }
 
-    // 🇺🇸 US STOCKS → Twelve Data
+    // 🇺🇸 US STOCKS → TWELVE DATA
     const response = await axios.get(
       "https://api.twelvedata.com/quote",
       {
         params: {
           symbol,
-          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7",
+          apikey: "YOUR_TWELVEDATA_API_KEY",
         },
       }
     );
@@ -101,7 +104,7 @@ app.get("/api/stock/:symbol", async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error(err.message);
 
     res.status(500).json({
       error: "API error",
@@ -114,30 +117,26 @@ app.get("/api/history/:symbol", async (req, res) => {
   try {
     let symbol = req.params.symbol.toUpperCase();
 
-    // 🇮🇳 NSE STOCK HISTORY
+    // 🇮🇳 INDIAN STOCK HISTORY
     if (symbol.includes(":NSE")) {
 
       const yahooSymbol =
         symbol.replace(":NSE", ".NS");
 
-      const result =
-        await yahooFinance.historical(
-          yahooSymbol,
-          {
-            period1: "2024-01-01",
-          }
-        );
-
-      const prices = result.map(
-        (item) => item.close
+      const response = await axios.get(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?range=1mo&interval=1d`
       );
+
+      const prices =
+        response.data.chart.result[0]
+          .indicators.quote[0].close;
 
       return res.json({
         c: prices,
       });
     }
 
-    // 🇺🇸 US HISTORY → Twelve Data
+    // 🇺🇸 US HISTORY → TWELVE DATA
     const response = await axios.get(
       "https://api.twelvedata.com/time_series",
       {
@@ -145,7 +144,7 @@ app.get("/api/history/:symbol", async (req, res) => {
           symbol,
           interval: "1day",
           outputsize: 30,
-          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7",
+          apikey: "YOUR_TWELVEDATA_API_KEY",
         },
       }
     );
@@ -169,7 +168,7 @@ app.get("/api/history/:symbol", async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error(err.message);
 
     res.status(500).json({
       c: [],
