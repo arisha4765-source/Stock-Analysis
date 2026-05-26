@@ -37,6 +37,11 @@ const signIn = async () => {
 
   setUser(data.user);
 };
+  useEffect(() => {
+  supabase.auth.getUser().then(({ data }) => {
+    setUser(data.user);
+  });
+}, []);
 
   const parseSignal = (text) => {
   if (!text) return "⚪ UNKNOWN";
