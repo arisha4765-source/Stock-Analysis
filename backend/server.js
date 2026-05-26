@@ -9,9 +9,41 @@ const app = express();
 const openai =
   new OpenAI({
     apiKey:
-      process.env.OPENAI_API_KEY,
+      process.env.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,
   });
+app.get("/api/ai", async (req, res) => {
+  try {
+    const { symbol, price, prediction, rsi, sentiment, question } =
+      req.query;
 
+    const prompt =
+      "You are a stock market assistant.\n\n" +
+      "Stock: " + symbol + "\n" +
+      "Price: " + price + "\n" +
+      "Prediction: " + prediction + "\n" +
+      "RSI: " + rsi + "\n" +
+      "Sentiment: " + sentiment + "\n\n" +
+      "User question: " + question + "\n\n" +
+      "Give a short, simple answer for an Indian retail trader.";
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    });
+
+    res.json({
+      answer: response.choices[0].message.content,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "AI failed" });
+  }
+});
 app.use(cors());
 app.use(express.json());
 
