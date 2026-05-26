@@ -36,10 +36,12 @@ export default function App() {
   const [data, setData] =
     useState(null);
 
-  const [history, setHistory] =
-    const [news, setNews] =
+ const [history, setHistory] =
   useState([]);
-    useState([]);
+
+const [news, setNews] =
+  useState([]);
+  
   const [alertPrice, setAlertPrice] =
   useState("");
 
