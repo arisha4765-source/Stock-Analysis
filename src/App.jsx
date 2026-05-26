@@ -131,29 +131,27 @@ export default function App() {
   };
 
   // AI
-  const askAI = () => {
-    if (!data) return;
+const askAI = async () => {
+  try {
+    const res = await axios.get(
+      "https://stock-analysis-81hr.onrender.com/api/ai",
+      {
+        params: {
+          symbol: data.symbol,
+          price: data.price,
+          prediction,
+          rsi,
+          sentiment,
+          question,
+        },
+      }
+    );
 
-    let answer = "";
-
-    if (prediction.includes("Bullish")) {
-      answer =
-        data.symbol +
-        " looks bullish. Momentum is positive.";
-    } else if (prediction.includes("Bearish")) {
-      answer =
-        data.symbol +
-        " looks bearish. Trend is weak.";
-    } else {
-      answer = data.symbol + " is neutral.";
-    }
-
-    if (sentiment.includes("Positive")) {
-      answer = answer + " News is positive.";
-    }
-
-    setAiAnswer(answer);
-  };
+    setAiAnswer(res.data.answer);
+  } catch (err) {
+    setAiAnswer("AI error. Try again later.");
+  }
+};
 
   // FETCH STOCK
   const fetchStock = async () => {
