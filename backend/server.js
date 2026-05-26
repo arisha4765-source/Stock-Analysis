@@ -4,9 +4,11 @@ const cors = require("cors");
 
 const app = express();
 
-app.use(cors({
-  origin: "*", // allow frontend to connect safely
-}));
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 
 app.use(express.json());
 
@@ -14,28 +16,50 @@ app.get("/", (req, res) => {
   res.send("Backend running");
 });
 
-// ---------------- STOCK API ----------------
+// 📈 STOCK INFO API
 app.get("/api/stock/:symbol", async (req, res) => {
   try {
     const symbol = req.params.symbol.toUpperCase();
 
+    // ✅ TWELVE DATA QUOTE API
     const response = await axios.get(
-      `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=d8a10g9r01qhv1uvp210d8a10g9r01qhv1uvp21g`
+      "https://api.twelvedata.com/quote",
+      {
+        params: {
+          symbol,
+          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7",
+        },
+      }
     );
 
     const stock = response.data;
 
-    if (!stock || stock.c === undefined) {
-      return res.status(404).json({ error: "Stock not found" });
+    // ❌ INVALID STOCK
+    if (!stock || !stock.close) {
+      return res.status(404).json({
+        error: "Stock not found",
+      });
     }
 
-    const price = stock.c;
-    const change = stock.dp;
+    const price = parseFloat(stock.close);
 
+    const previousClose = parseFloat(stock.previous_close || price);
+
+    const change = (
+      ((price - previousClose) / previousClose) *
+      100
+    ).toFixed(2);
+
+    // 🧠 SIMPLE RECOMMENDATION ENGINE
     let recommendation = "HOLD";
-    if (change > 2) recommendation = "STRONG BUY";
-    else if (change > 0) recommendation = "BUY";
-    else if (change < -2) recommendation = "SELL";
+
+    if (change > 2) {
+      recommendation = "STRONG BUY";
+    } else if (change > 0) {
+      recommendation = "BUY";
+    } else if (change < -2) {
+      recommendation = "SELL";
+    }
 
     res.json({
       symbol,
@@ -43,25 +67,29 @@ app.get("/api/stock/:symbol", async (req, res) => {
       change,
       recommendation,
     });
+
   } catch (err) {
-    console.error("STOCK ERROR:", err.message);
-    res.status(500).json({ error: "API error" });
+    console.error(err.message);
+
+    res.status(500).json({
+      error: "API error",
+    });
   }
 });
 
-// ---------------- HISTORY API ----------------
+// 📊 HISTORY API
 app.get("/api/history/:symbol", async (req, res) => {
   try {
     const symbol = req.params.symbol.toUpperCase();
 
     const response = await axios.get(
-      `https://api.twelvedata.com/time_series`,
+      "https://api.twelvedata.com/time_series",
       {
         params: {
           symbol,
           interval: "1day",
           outputsize: 30,
-          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7",
+          apikey: "YOUR_TWELVEDATA_API_KEY",
         },
       }
     );
@@ -71,11 +99,11 @@ app.get("/api/history/:symbol", async (req, res) => {
     if (!values) {
       return res.json({
         c: [],
-        error: response.data?.message || "No data from Twelve Data",
+        error: "No history data",
       });
     }
 
-    // Twelve Data returns newest first → reverse it
+    // newest → oldest
     const closePrices = values
       .reverse()
       .map((item) => parseFloat(item.close));
@@ -85,10 +113,11 @@ app.get("/api/history/:symbol", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("HISTORY ERROR:", err.message);
-    res.json({
+    console.error(err.message);
+
+    res.status(500).json({
       c: [],
-      error: "API failed",
+      error: "History API error",
     });
   }
 });
