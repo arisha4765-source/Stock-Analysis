@@ -63,7 +63,7 @@ app.get("/api/stock/:symbol", async (req, res) => {
       {
         params: {
           symbol,
-          apikey: "YOUR_TWELVEDATA_API_KEY",
+          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7",
         },
       }
     );
@@ -144,7 +144,7 @@ app.get("/api/history/:symbol", async (req, res) => {
           symbol,
           interval: "1day",
           outputsize: 30,
-          apikey: "YOUR_TWELVEDATA_API_KEY",
+          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7",
         },
       }
     );
