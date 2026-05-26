@@ -16,6 +16,17 @@ export default function App() {
   const [question, setQuestion] = useState("");
   const [aiAnswer, setAiAnswer] = useState("");
 
+  const parseSignal = (text) => {
+  if (!text) return "⚪ UNKNOWN";
+
+  const lower = text.toLowerCase();
+
+  if (lower.includes("buy")) return "🟢 BUY";
+  if (lower.includes("sell")) return "🔴 SELL";
+  if (lower.includes("hold")) return "🟡 HOLD";
+
+  return "⚪ UNKNOWN";
+};
   // ---------------- FETCH STOCK ----------------
   const fetchStock = async () => {
     const res = await axios.get(
