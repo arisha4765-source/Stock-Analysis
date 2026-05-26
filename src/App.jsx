@@ -307,9 +307,10 @@ if (
   rsi < 70
 ) {
 
-  answer =
-    `${data.symbol} looks bullish 📈. ` +
-    `Momentum is positive and RSI is healthy.`;
+ answer =
+  data.symbol +
+  " looks bullish 📈. " +
+  "Momentum is positive and RSI is healthy.";
 
 } else if (
   prediction.includes(
@@ -318,13 +319,15 @@ if (
 ) {
 
   answer =
-    `${data.symbol} looks bearish 📉. ` +
-    `Recent trend is weak.`;
+  data.symbol +
+  " looks bearish 📉. " +
+  "Recent trend is weak.";
 
 } else {
 
-  answer =
-    `${data.symbol} is neutral ➖.`;
+answer =
+  data.symbol +
+  " is neutral ➖.";
 }
 
 if (
