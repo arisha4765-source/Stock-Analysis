@@ -12,7 +12,7 @@ import {
 export default function App() {
   const [symbol, setSymbol] = useState("");
   const [data, setData] = useState(null);
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = ([]);
   const [question, setQuestion] = useState("");
   const [aiAnswer, setAiAnswer] = useState("");
 
@@ -37,26 +37,29 @@ export default function App() {
   };
 
   // ---------------- AI ----------------
-  const askAI = async () => {
-    const res = await axios.post(
-      "https://stock-analysis-81hr.onrender.com/api/ai",
-      {
-        symbol: data.symbol,
-        price: data.price,
-        history: history.map((h) => h.price),
-        question,
-      }
-    );
+ const askAI = async () => {
+  const res = await axios.post(
+    "https://stock-analysis-81hr.onrender.com/api/ai",
+    {
+      symbol: data.symbol,
+      price: data.price,
+      history: history.map((h) => h.price),
+      question,
+    }
+  );
 
-    setAiAnswer(res.data.answer);
-  };
-
+  setAiAnswer(res.data.analysis);
+};
+ <h3>Signal: {parseSignal(aiAnswer)}</h3>
+<pre style={{ whiteSpace: "pre-wrap" }}>{aiAnswer}</pre>
   return (
     <div style={{ display: "flex", height: "100vh", background: "#0f0f0f", color: "white" }}>
 
       {/* SIDEBAR */}
-      <div style={{ width: 260, padding: 20, background: "#111" }}>
-        <h2>📊 Trading AI</h2>
+      <div style={{ marginTop: 20, padding: 10, background: "#222" }}>
+  <h3>🤖 AI Trading Signal</h3>
+  <pre style={{ whiteSpace: "pre-wrap" }}>{aiAnswer}</pre>
+</div>
 
         <input
           placeholder="Enter stock (TCS, AAPL)"
