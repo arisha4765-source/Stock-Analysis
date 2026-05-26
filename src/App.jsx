@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+} from "react";
+
 import axios from "axios";
 
 import {
@@ -7,6 +11,7 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  Title,
   Tooltip,
   Legend,
 } from "chart.js";
@@ -18,111 +23,142 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  Title,
   Tooltip,
   Legend
 );
 
 export default function App() {
-  const [symbol, setSymbol] = useState("");
-  const [data, setData] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [watchlist, setWatchlist] = useState([]);
-  const [darkMode, setDarkMode] = useState(false);
 
-  // 🚀 SMART STOCK FETCHER
-const fetchStock = async (loadHistory = true) => {
-  try {
-    if (!symbol) return;
+  const [symbol, setSymbol] =
+    useState("");
 
-    let formattedSymbol =
-      symbol.trim().toUpperCase();
+  const [data, setData] =
+    useState(null);
 
-    // 🇮🇳 Indian stock list
-    const indianStocks = [
-      "TCS",
-      "RELIANCE",
-      "INFY",
-      "SBIN",
-      "ITC",
-      "HDFCBANK",
-      "WIPRO",
-      "ICICIBANK",
-      "LT",
-      "AXISBANK",
-      "BHARTIARTL",
-      "KOTAKBANK",
-      "ASIANPAINT",
-      "MARUTI",
-      "HCLTECH",
-    ];
+  const [history, setHistory] =
+    useState([]);
 
-    // ✅ Add NSE automatically
-    if (
-      indianStocks.includes(formattedSymbol)
-    ) {
-      formattedSymbol =
-        `${formattedSymbol}:NSE`;
-    }
+  const [watchlist, setWatchlist] =
+    useState([]);
 
-    // 📈 STOCK DATA
-    const stockRes = await axios.get(
-      `https://stock-analysis-81hr.onrender.com/api/stock/${formattedSymbol}`
-    );
+  const [darkMode, setDarkMode] =
+    useState(false);
 
-    setData(stockRes.data);
+  // ✅ FETCH STOCK
+  const fetchStock = async (
+    loadHistory = true
+  ) => {
 
-    // 📊 HISTORY DATA
-    if (loadHistory) {
+    try {
 
-      const historyRes =
+      if (!symbol) return;
+
+      let formattedSymbol =
+        symbol.trim().toUpperCase();
+
+      // 🇮🇳 Indian Stocks
+      const indianStocks = [
+        "TCS",
+        "RELIANCE",
+        "INFY",
+        "SBIN",
+        "ITC",
+        "HDFCBANK",
+        "WIPRO",
+        "ICICIBANK",
+        "LT",
+        "AXISBANK",
+        "BHARTIARTL",
+        "KOTAKBANK",
+        "ASIANPAINT",
+        "MARUTI",
+        "HCLTECH",
+      ];
+
+      // ✅ Add NSE suffix
+      if (
+        indianStocks.includes(
+          formattedSymbol
+        )
+      ) {
+        formattedSymbol =
+          `${formattedSymbol}:NSE`;
+      }
+
+      // 📈 STOCK DATA
+      const stockRes =
         await axios.get(
-          `https://stock-analysis-81hr.onrender.com/api/history/${formattedSymbol}`
+          `https://stock-analysis-81hr.onrender.com/api/stock/${formattedSymbol}`
         );
 
-      const cleanHistory =
-        Array.isArray(historyRes.data.c)
-          ? historyRes.data.c.filter(
-              (item) =>
-                item !== null
-            )
-          : [];
+      setData(stockRes.data);
 
-      setHistory(cleanHistory);
+      // 📊 HISTORY
+      if (loadHistory) {
+
+        const historyRes =
+          await axios.get(
+            `https://stock-analysis-81hr.onrender.com/api/history/${formattedSymbol}`
+          );
+
+        const cleanHistory =
+          Array.isArray(
+            historyRes.data.c
+          )
+            ? historyRes.data.c.filter(
+                (item) =>
+                  item !== null
+              )
+            : [];
+
+        setHistory(cleanHistory);
+      }
+
+    } catch (err) {
+
+      console.error(
+        err.response?.data ||
+        err.message
+      );
+
+      alert("Stock not found");
     }
+  };
 
-  } catch (err) {
+  // 🔄 AUTO REFRESH
+  useEffect(() => {
 
-    console.error(
-      err.response?.data || err.message
-    );
+    if (!data) return;
 
-    alert("Stock not found");
-  }
-};
+    const interval =
+      setInterval(() => {
+        fetchStock(false);
+      }, 30000);
 
-  // ⚡ REAL-TIME UPDATES EVERY 5 SECONDS
- useEffect(() => {
-  if (!symbol || !data) return;
+    return () =>
+      clearInterval(interval);
 
-  const interval = setInterval(() => {
-    fetchStock(false);
-  }, 30000);
+  }, [data]);
 
-  return () => clearInterval(interval);
-}, [symbol, data]);
-
-  // 📊 CHART CONFIG
+  // 📈 CHART DATA
   const chartData = {
-    labels: history.map((_, i) => i + 1),
+    labels: history.map(
+      (_, i) => i + 1
+    ),
 
     datasets: [
       {
-        label: `${symbol.toUpperCase()} Price History`,
+        label:
+          "Price History",
+
         data: history,
 
-        borderColor: "rgb(75, 192, 192)",
+        borderColor:
+          "rgb(75,192,192)",
 
-        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        backgroundColor:
+          "rgba(75,192,192,0.2)",
 
         tension: 0.4,
       },
@@ -133,148 +169,166 @@ const fetchStock = async (loadHistory = true) => {
     <div
       style={{
         padding: 30,
-        background: darkMode ? "#111" : "#fff",
-        color: darkMode ? "#fff" : "#000",
         minHeight: "100vh",
-        transition: "0.3s",
+
+        background: darkMode
+          ? "#111"
+          : "#fff",
+
+        color: darkMode
+          ? "#fff"
+          : "#000",
       }}
     >
-      {/* HEADER */}
-      <h1>📈 Live Stock Analyzer Dashboard</h1>
 
-      <p>
-        Track real-time US stocks, Indian stocks,
-        crypto, and market indices.
-      </p>
+      <h1>
+        📈 Live Stock Analyzer
+      </h1>
 
-      {/* THEME BUTTON */}
-      <button onClick={() => setDarkMode(!darkMode)}>
+      <button
+        onClick={() =>
+          setDarkMode(
+            !darkMode
+          )
+        }
+      >
         Toggle Theme
       </button>
 
       <br />
       <br />
 
-      {/* SEARCH */}
       <input
-        placeholder="AAPL, TCS, BTC, NIFTY..."
+        placeholder="Enter Stock Symbol"
         value={symbol}
-        onChange={(e) => setSymbol(e.target.value)}
-        style={{
-          padding: "10px",
-          width: "260px",
-          borderRadius: "5px",
-          border: "1px solid gray",
-        }}
+        onChange={(e) =>
+          setSymbol(
+            e.target.value
+          )
+        }
       />
 
-      {/* ANALYZE BUTTON */}
       <button
-        onClick={() => fetchStock(true)}
-        style={{
-          marginLeft: "10px",
-          padding: "10px",
-        }}
+        onClick={() =>
+          fetchStock(true)
+        }
       >
         Analyze
       </button>
 
-      {/* WATCHLIST BUTTON */}
       <button
-        onClick={() => {
-          if (symbol && !watchlist.includes(symbol)) {
-            setWatchlist([...watchlist, symbol]);
-          }
-        }}
-        style={{
-          marginLeft: "10px",
-          padding: "10px",
-        }}
+        onClick={() =>
+          setWatchlist([
+            ...watchlist,
+            symbol,
+          ])
+        }
       >
         Add to Watchlist
       </button>
 
-      {/* STOCK INFO */}
+      {/* 📊 RESULTS */}
       {data && (
-        <div style={{ marginTop: 30 }}>
-          <h2>{data.symbol}</h2>
 
-          <h3>💲 Price: ${data.price}</h3>
+        <div
+          style={{
+            marginTop: 20,
+          }}
+        >
 
-          <h3>📊 Change: {data.change}%</h3>
+          <h2>
+            {data.symbol}
+          </h2>
 
-          <h3>🧠 Recommendation: {data.recommendation}</h3>
+          <h3>
+            Price: $
+            {data.price}
+          </h3>
+
+          <h3>
+            Change:
+            {" "}
+            {data.change}%
+          </h3>
+
+          <h3>
+            Recommendation:
+            {" "}
+            {
+              data.recommendation
+            }
+          </h3>
+
+          {/* 📈 CHART */}
+          {history.length >
+          0 ? (
+
+            <div
+              style={{
+                width: "700px",
+                maxWidth:
+                  "100%",
+
+                marginTop: 20,
+
+                background:
+                  "#fff",
+
+                padding: 20,
+
+                borderRadius: 10,
+              }}
+            >
+
+              <Line
+                data={
+                  chartData
+                }
+                options={{
+                  responsive: true,
+                }}
+              />
+
+            </div>
+
+          ) : (
+
+            <p>
+              No chart data
+              available
+            </p>
+
+          )}
+
         </div>
       )}
 
-      {/* CHART */}
+      {/* ⭐ WATCHLIST */}
       <div
         style={{
-          width: "700px",
-          maxWidth: "100%",
-          marginTop: 20,
-          background: darkMode ? "#222" : "#f5f5f5",
-          padding: "20px",
-          borderRadius: "10px",
+          marginTop: 30,
         }}
       >
-        {history.length > 0 ? (
-          <Line
-            data={chartData}
-            options={{
-              responsive: true,
 
-              plugins: {
-                legend: {
-                  labels: {
-                    color: darkMode ? "#fff" : "#000",
-                  },
-                },
-              },
-
-              scales: {
-                x: {
-                  ticks: {
-                    color: darkMode ? "#fff" : "#000",
-                  },
-                },
-
-                y: {
-                  ticks: {
-                    color: darkMode ? "#fff" : "#000",
-                  },
-                },
-              },
-            }}
-          />
-        ) : (
-          <p>No chart data available</p>
-        )}
-      </div>
-
-      {/* WATCHLIST */}
-      <div style={{ marginTop: 40 }}>
-        <h2>⭐ Watchlist</h2>
+        <h2>
+          ⭐ Watchlist
+        </h2>
 
         <ul>
-          {watchlist.map((item, index) => (
-            <li key={index}>{item}</li>
-          ))}
+          {watchlist.map(
+            (
+              item,
+              index
+            ) => (
+              <li key={index}>
+                {item}
+              </li>
+            )
+          )}
         </ul>
+
       </div>
 
-      {/* SEO CONTENT */}
-      <div style={{ marginTop: 40 }}>
-        <h2>Real-Time Market Dashboard</h2>
-
-        <p>
-          This dashboard provides live stock prices,
-          cryptocurrency tracking, market indices,
-          and historical charts for US and Indian markets
-          including Apple, Tesla, Reliance, TCS,
-          Infosys, Bitcoin, Ethereum, and more.
-        </p>
-      </div>
     </div>
   );
 }
