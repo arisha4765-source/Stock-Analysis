@@ -39,6 +39,12 @@ export default function App() {
  const [history, setHistory] =
   useState([]);
 
+const [prediction, setPrediction] =
+  useState("");
+
+const [confidence, setConfidence] =
+  useState(0);
+  
 const [news, setNews] =
   useState([]);
   
@@ -122,6 +128,71 @@ const [alerts, setAlerts] =
             : [];
 
         setHistory(cleanHistory);
+        // 🤖 AI PREDICTION
+
+if (cleanHistory.length >= 5) {
+
+  const recent =
+    cleanHistory.slice(-5);
+
+  const first =
+    recent[0];
+
+  const last =
+    recent[
+      recent.length - 1
+    ];
+
+  const trend =
+    ((last - first) / first) *
+    100;
+
+  // 📈 Bullish
+  if (trend > 2) {
+
+    setPrediction(
+      "Bullish 📈"
+    );
+
+    setConfidence(
+      Math.min(
+        95,
+        Math.round(
+          Math.abs(trend) * 10
+        )
+      )
+    );
+
+  }
+
+  // 📉 Bearish
+  else if (trend < -2) {
+
+    setPrediction(
+      "Bearish 📉"
+    );
+
+    setConfidence(
+      Math.min(
+        95,
+        Math.round(
+          Math.abs(trend) * 10
+        )
+      )
+    );
+
+  }
+
+  // ➖ Neutral
+  else {
+
+    setPrediction(
+      "Neutral ➖"
+    );
+
+    setConfidence(50);
+  }
+}
         const newsRes =
   await axios.get(
     `https://stock-analysis-81hr.onrender.com/api/news/${formattedSymbol}`
@@ -408,6 +479,33 @@ alerts.forEach((item) => {
 
           <h3>
             Recommendation:
+            <div
+  style={{
+    marginTop: 20,
+    padding: 20,
+    borderRadius: 10,
+    background:
+      darkMode
+        ? "#222"
+        : "#f5f5f5",
+  }}
+>
+
+  <h2>
+    🤖 AI Prediction
+  </h2>
+
+  <h3>
+    {prediction}
+  </h3>
+
+  <p>
+    Confidence:
+    {" "}
+    {confidence}%
+  </p>
+
+</div>
             {" "}
             {
               data.recommendation
