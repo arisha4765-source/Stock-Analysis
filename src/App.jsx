@@ -43,6 +43,17 @@ const signIn = async () => {
   });
 }, []);
 
+  const addToWatchlist = async (symbol) => {
+  await supabase.from("watchlist").insert([
+    {
+      user_id: user.id,
+      symbol,
+    },
+  ]);
+
+  loadWatchlist();
+};
+
   const parseSignal = (text) => {
   if (!text) return "⚪ UNKNOWN";
 
