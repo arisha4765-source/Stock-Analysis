@@ -1,628 +1,782 @@
 import React, {
-  useState,
-  useEffect,
+useState,
+useEffect,
 } from "react";
 
 import axios from "axios";
+
 import supabase
 from "./supabase";
+
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
+Chart as ChartJS,
+CategoryScale,
+LinearScale,
+PointElement,
+LineElement,
+Title,
+Tooltip,
+Legend,
 } from "chart.js";
 
-import { Line } from "react-chartjs-2";
+import { Line }
+from "react-chartjs-2";
 
 ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
+CategoryScale,
+LinearScale,
+PointElement,
+LineElement,
+Title,
+Tooltip,
+Legend
 );
 
 export default function App() {
 
-  // 🔹 STATES
-  const [symbol, setSymbol] =
-    useState("");
+// 🔹 STOCK STATES
+const [symbol, setSymbol] =
+useState("");
 
-  const [data, setData] =
-    useState(null);
+const [data, setData] =
+useState(null);
 
-  const [history, setHistory] =
-    useState([]);
+const [history, setHistory] =
+useState([]);
 
-  const [watchlist, setWatchlist] =
-    useState([]);
+const [watchlist, setWatchlist] =
+useState([]);
 
-  const [darkMode, setDarkMode] =
-    useState(false);
+const [news, setNews] =
+useState([]);
 
-  const [news, setNews] =
-    useState([]);
+// 🔹 THEME
+const [darkMode, setDarkMode] =
+useState(false);
 
-  const [prediction, setPrediction] =
-    useState("");
+// 🔹 AI STATES
+const [prediction, setPrediction] =
+useState("");
 
-  const [confidence, setConfidence] =
-    useState(0);
+const [confidence, setConfidence] =
+useState(0);
 
-  const [rsi, setRsi] =
-    useState(0);
+const [rsi, setRsi] =
+useState(0);
 
-  const [ma, setMa] =
-    useState(0);
+const [ma, setMa] =
+useState(0);
 
-  const [sentiment, setSentiment] =
-    useState("");
+const [sentiment, setSentiment] =
+useState("");
 
-  const [alertPrice, setAlertPrice] =
-    useState("");
-
-  const [alerts, setAlerts] =
-    useState([]);
-
-  const [question, setQuestion] =
-  useState("");
+const [question, setQuestion] =
+useState("");
 
 const [aiAnswer, setAiAnswer] =
-  useState("");
+useState("");
 
-  const [email, setEmail] =
-  useState("");
+// 🔔 ALERTS
+const [alertPrice, setAlertPrice] =
+useState("");
+
+const [alerts, setAlerts] =
+useState([]);
+
+// 👤 AUTH STATES
+const [email, setEmail] =
+useState("");
 
 const [password, setPassword] =
-  useState("");
+useState("");
 
-const [loggedIn, setLoggedIn] =
-  useState(false);
+const [user, setUser] =
+useState(null);
 
-  // 🔹 RSI FUNCTION
-  const calculateRSI = (
-    prices
-  ) => {
+const [loading, setLoading] =
+useState(false);
 
-    if (prices.length < 15)
-      return 50;
+const [authMessage, setAuthMessage] =
+useState("");
 
-    let gains = 0;
-    let losses = 0;
+// ✅ CHECK USER SESSION
+useEffect(() => {
 
-    for (
-      let i = 1;
-      i < 15;
-      i++
-    ) {
+```
+const getUser = async () => {
 
-      const diff =
-        prices[i] -
-        prices[i - 1];
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-      if (diff > 0)
-        gains += diff;
-      else
-        losses -= diff;
-    }
-
-    const rs =
-      gains / (losses || 1);
-
-    return (
-      100 -
-      100 / (1 + rs)
-    ).toFixed(2);
-  };
-
-  // 🔹 MOVING AVERAGE
-  const movingAverage = (
-    prices,
-    days
-  ) => {
-
-    const recent =
-      prices.slice(-days);
-
-    const sum =
-      recent.reduce(
-        (a, b) => a + b,
-        0
-      );
-
-    return (
-      sum / recent.length
-    ).toFixed(2);
-  };
-
-  const askAI = async () => {
-
-  try {
-
-    const response =
-      await axios.post(
-        "https://stock-analysis-81hr.onrender.com/api/ai",
-        {
-          symbol:
-            data.symbol,
-
-          price:
-            data.price,
-
-          prediction,
-
-          sentiment,
-
-          rsi,
-        }
-      );
-
-    setAiAnswer(
-      response.data.answer
-    );
-
-  } catch (err) {
-
-    console.error(err);
-
-    setAiAnswer(
-      "AI failed."
-    );
+  if (user) {
+    setUser(user);
   }
 };
 
-  const signup = async () => {
+getUser();
+```
 
-  const { error } =
-    await supabase.auth.signUp({
+}, []);
 
-      email,
-      password,
-    });
+// 🔹 RSI FUNCTION
+const calculateRSI = (
+prices
+) => {
 
-  if (error) {
+```
+if (prices.length < 15)
+  return 50;
 
-    alert(error.message);
+let gains = 0;
+let losses = 0;
 
-  } else {
+for (
+  let i = 1;
+  i < 15;
+  i++
+) {
 
-    alert(
-      "Signup successful"
-    );
-  }
+  const diff =
+    prices[i] -
+    prices[i - 1];
+
+  if (diff > 0)
+    gains += diff;
+  else
+    losses -= diff;
+}
+
+const rs =
+  gains / (losses || 1);
+
+return (
+  100 -
+  100 / (1 + rs)
+).toFixed(2);
+```
+
 };
 
+// 🔹 MOVING AVERAGE
+const movingAverage = (
+prices,
+days
+) => {
+
+```
+const recent =
+  prices.slice(-days);
+
+const sum =
+  recent.reduce(
+    (a, b) => a + b,
+    0
+  );
+
+return (
+  sum / recent.length
+).toFixed(2);
+```
+
+};
+
+// 🔹 SIGNUP
+const signup = async () => {
+
+```
+if (!email || !password) {
+
+  setAuthMessage(
+    "Please fill all fields"
+  );
+
+  return;
+}
+
+if (password.length < 6) {
+
+  setAuthMessage(
+    "Password must be at least 6 characters"
+  );
+
+  return;
+}
+
+setLoading(true);
+
+const { error } =
+  await supabase.auth.signUp({
+
+    email,
+    password,
+  });
+
+setLoading(false);
+
+if (error) {
+
+  setAuthMessage(error.message);
+
+} else {
+
+  setAuthMessage(
+    "Signup successful ✅"
+  );
+}
+```
+
+};
+
+// 🔹 LOGIN
 const login = async () => {
 
-  const { error } =
-    await supabase.auth.signInWithPassword({
+```
+if (!email || !password) {
 
-      email,
-      password,
-    });
+  setAuthMessage(
+    "Please fill all fields"
+  );
 
-  if (error) {
+  return;
+}
 
-    alert(error.message);
+setLoading(true);
 
-  } else {
+const {
+  data,
+  error,
+} = await supabase.auth.signInWithPassword({
 
-    setLoggedIn(true);
+  email,
+  password,
+});
 
-    alert(
-      "Login successful"
-    );
-  }
+setLoading(false);
+
+if (error) {
+
+  setAuthMessage(error.message);
+
+} else {
+
+  setUser(data.user);
+
+  setAuthMessage(
+    "Login successful ✅"
+  );
+}
+```
+
 };
-  // 🔹 FETCH STOCK
-  const fetchStock = async (
-    loadHistory = true
-  ) => {
 
-    try {
+// 🔹 LOGOUT
+const logout = async () => {
 
-      if (!symbol) return;
+```
+await supabase.auth.signOut();
 
-      let formattedSymbol =
-        symbol.trim().toUpperCase();
+setUser(null);
 
-      // 🇮🇳 Indian Stocks
-      const indianStocks = [
-        "TCS",
-        "RELIANCE",
-        "INFY",
-        "SBIN",
-        "ITC",
-        "HDFCBANK",
-        "WIPRO",
-        "ICICIBANK",
-        "LT",
-        "AXISBANK",
-        "BHARTIARTL",
-        "KOTAKBANK",
-        "ASIANPAINT",
-        "MARUTI",
-        "HCLTECH",
-      ];
+setAuthMessage(
+  "Logged out"
+);
+```
 
-      if (
-        indianStocks.includes(
-          formattedSymbol
-        )
-      ) {
-        formattedSymbol =
-          `${formattedSymbol}:NSE`;
-      }
+};
 
-      // 📈 STOCK DATA
-      const stockRes =
-        await axios.get(
-          `https://stock-analysis-81hr.onrender.com/api/stock/${formattedSymbol}`
-        );
+// 🔹 AI ASSISTANT
+const askAI = async () => {
 
-      setData(stockRes.data);
+```
+if (!data) {
 
-      // 📊 HISTORY
-      if (loadHistory) {
+  setAiAnswer(
+    "Analyze a stock first"
+  );
 
-        const historyRes =
-          await axios.get(
-            `https://stock-analysis-81hr.onrender.com/api/history/${formattedSymbol}`
-          );
+  return;
+}
 
-        const cleanHistory =
-          Array.isArray(
-            historyRes.data.c
-          )
-            ? historyRes.data.c.filter(
-                (item) =>
-                  item !== null
-              )
-            : [];
+let answer = "";
 
-        setHistory(cleanHistory);
+if (
+  prediction.includes(
+    "Bullish"
+  ) &&
+  rsi < 70
+) {
 
-        // 🤖 AI PREDICTION
-        if (
-          cleanHistory.length >= 5
-        ) {
+  answer =
+    `${data.symbol} looks bullish 📈. ` +
+    `Momentum is positive and RSI is healthy.`;
 
-          const recent =
-            cleanHistory.slice(-5);
+} else if (
+  prediction.includes(
+    "Bearish"
+  )
+) {
 
-          const first =
-            recent[0];
+  answer =
+    `${data.symbol} looks bearish 📉. ` +
+    `Recent trend is weak.`;
 
-          const last =
-            recent[
-              recent.length - 1
-            ];
+} else {
 
-          const trend =
-            ((last - first) /
-              first) *
-            100;
+  answer =
+    `${data.symbol} is neutral ➖.`;
+}
 
-          if (trend > 2) {
+if (
+  sentiment.includes(
+    "Positive"
+  )
+) {
 
-            setPrediction(
-              "Bullish 📈"
-            );
+  answer +=
+    " News sentiment is positive.";
 
-            setConfidence(
-              Math.min(
-                95,
-                Math.round(
-                  Math.abs(
-                    trend
-                  ) * 10
-                )
-              )
-            );
+} else if (
+  sentiment.includes(
+    "Negative"
+  )
+) {
 
-          } else if (
-            trend < -2
-          ) {
+  answer +=
+    " News sentiment is negative.";
+}
 
-            setPrediction(
-              "Bearish 📉"
-            );
+setAiAnswer(answer);
+```
 
-            setConfidence(
-              Math.min(
-                95,
-                Math.round(
-                  Math.abs(
-                    trend
-                  ) * 10
-                )
-              )
-            );
+};
 
-          } else {
+// 🔹 FETCH STOCK
+const fetchStock = async (
+loadHistory = true
+) => {
 
-            setPrediction(
-              "Neutral ➖"
-            );
+```
+try {
 
-            setConfidence(
-              50
-            );
-          }
+  if (!symbol) return;
 
-          // 📊 RSI
-          const rsiValue =
-            calculateRSI(
-              cleanHistory
-            );
+  let formattedSymbol =
+    symbol.trim().toUpperCase();
 
-          setRsi(rsiValue);
+  const indianStocks = [
+    "TCS",
+    "RELIANCE",
+    "INFY",
+    "SBIN",
+    "ITC",
+    "HDFCBANK",
+    "WIPRO",
+    "ICICIBANK",
+  ];
 
-          // 📈 MOVING AVERAGE
-          const maValue =
-            movingAverage(
-              cleanHistory,
-              5
-            );
+  if (
+    indianStocks.includes(
+      formattedSymbol
+    )
+  ) {
 
-          setMa(maValue);
-        }
+    formattedSymbol =
+      `${formattedSymbol}:NSE`;
+  }
 
-        // 📰 NEWS
-        const newsRes =
-          await axios.get(
-            `https://stock-analysis-81hr.onrender.com/api/news/${formattedSymbol}`
-          );
+  // 📈 STOCK
+  const stockRes =
+    await axios.get(
+      `https://stock-analysis-81hr.onrender.com/api/stock/${formattedSymbol}`
+    );
 
-        setNews(
-          newsRes.data
-        );
+  setData(stockRes.data);
 
-        // 🤖 SENTIMENT AI
-        const positiveWords =
-          [
-            "gain",
-            "surge",
-            "profit",
-            "growth",
-            "bullish",
-          ];
+  // 📊 HISTORY
+  if (loadHistory) {
 
-        const negativeWords =
-          [
-            "loss",
-            "crash",
-            "drop",
-            "bearish",
-          ];
-
-        let score = 0;
-
-        newsRes.data.forEach(
-          (article) => {
-
-            const title =
-              article.title?.toLowerCase() ||
-              "";
-
-            positiveWords.forEach(
-              (word) => {
-
-                if (
-                  title.includes(
-                    word
-                  )
-                )
-                  score++;
-              }
-            );
-
-            negativeWords.forEach(
-              (word) => {
-
-                if (
-                  title.includes(
-                    word
-                  )
-                )
-                  score--;
-              }
-            );
-          }
-        );
-
-        if (score > 0)
-          setSentiment(
-            "Positive 📈"
-          );
-        else if (score < 0)
-          setSentiment(
-            "Negative 📉"
-          );
-        else
-          setSentiment(
-            "Neutral ➖"
-          );
-      }
-
-    } catch (err) {
-
-      console.error(
-        err.response?.data ||
-        err.message
+    const historyRes =
+      await axios.get(
+        `https://stock-analysis-81hr.onrender.com/api/history/${formattedSymbol}`
       );
 
-      alert(
-        "Stock not found"
+    const cleanHistory =
+      Array.isArray(
+        historyRes.data.c
+      )
+        ? historyRes.data.c.filter(
+            (item) =>
+              item !== null
+          )
+        : [];
+
+    setHistory(cleanHistory);
+
+    // 🤖 PREDICTION
+    if (
+      cleanHistory.length >= 5
+    ) {
+
+      const recent =
+        cleanHistory.slice(-5);
+
+      const first = recent[0];
+
+      const last =
+        recent[
+          recent.length - 1
+        ];
+
+      const trend =
+        ((last - first) /
+          first) *
+        100;
+
+      if (trend > 2) {
+
+        setPrediction(
+          "Bullish 📈"
+        );
+
+        setConfidence(
+          Math.round(
+            Math.abs(
+              trend
+            ) * 10
+          )
+        );
+
+      } else if (
+        trend < -2
+      ) {
+
+        setPrediction(
+          "Bearish 📉"
+        );
+
+        setConfidence(
+          Math.round(
+            Math.abs(
+              trend
+            ) * 10
+          )
+        );
+
+      } else {
+
+        setPrediction(
+          "Neutral ➖"
+        );
+
+        setConfidence(50);
+      }
+
+      setRsi(
+        calculateRSI(
+          cleanHistory
+        )
+      );
+
+      setMa(
+        movingAverage(
+          cleanHistory,
+          5
+        )
       );
     }
-  };
 
-  // 🔄 AUTO REFRESH
-  useEffect(() => {
+    // 📰 NEWS
+    const newsRes =
+      await axios.get(
+        `https://stock-analysis-81hr.onrender.com/api/news/${formattedSymbol}`
+      );
 
-    if (!data) return;
+    setNews(newsRes.data);
 
-    const interval =
-      setInterval(() => {
+    // 🤖 SENTIMENT
+    const positiveWords = [
+      "gain",
+      "profit",
+      "growth",
+      "bullish",
+    ];
 
-        fetchStock(false);
+    const negativeWords = [
+      "loss",
+      "crash",
+      "drop",
+      "bearish",
+    ];
 
-        // 🔔 ALERT CHECK
-        alerts.forEach(
-          (item) => {
+    let score = 0;
+
+    newsRes.data.forEach(
+      (article) => {
+
+        const title =
+          article.title?.toLowerCase() ||
+          "";
+
+        positiveWords.forEach(
+          (word) => {
 
             if (
-              data &&
-              data.symbol.includes(
-                item.symbol
-              ) &&
-              Number(
-                data.price
-              ) >=
-                item.target
+              title.includes(word)
             ) {
-
-              alert(
-                `${item.symbol} hit ₹${item.target}!`
-              );
+              score++;
             }
           }
         );
 
-      }, 60000);
+        negativeWords.forEach(
+          (word) => {
 
-    return () =>
-      clearInterval(
-        interval
+            if (
+              title.includes(word)
+            ) {
+              score--;
+            }
+          }
+        );
+      }
+    );
+
+    if (score > 0) {
+      setSentiment(
+        "Positive 📈"
       );
+    } else if (score < 0) {
+      setSentiment(
+        "Negative 📉"
+      );
+    } else {
+      setSentiment(
+        "Neutral ➖"
+      );
+    }
+  }
 
-  }, [data, alerts]);
+} catch (err) {
 
-  // 📈 CHART
-  const chartData = {
-    labels: history.map(
-      (_, i) => i + 1
-    ),
+  console.error(err);
 
-    datasets: [
-      {
-        label:
-          "Price History",
+  alert(
+    "Stock not found"
+  );
+}
+```
 
-        data: history,
+};
 
-        borderColor:
-          "rgb(75,192,192)",
+// 🔄 AUTO REFRESH
+useEffect(() => {
 
-        backgroundColor:
-          "rgba(75,192,192,0.2)",
+```
+if (!data) return;
 
-        tension: 0.4,
-      },
-    ],
-  };
+const interval =
+  setInterval(() => {
 
-  return (
-    <div
-      style={{
-        padding: 30,
-        minHeight: "100vh",
+    fetchStock(false);
 
-        background: darkMode
-          ? "#111"
-          : "#fff",
+    alerts.forEach(
+      (item) => {
 
-        color: darkMode
-          ? "#fff"
-          : "#000",
-      }}
-    >
+        if (
+          data &&
+          data.symbol.includes(
+            item.symbol
+          ) &&
+          Number(data.price) >=
+            item.target
+        ) {
 
-      <h1>
-        📈 Live Stock Analyzer
-      </h1>
+          alert(
+            `${item.symbol} hit ₹${item.target}`
+          );
+        }
+      }
+    );
+
+  }, 60000);
+
+return () =>
+  clearInterval(interval);
+```
+
+}, [data, alerts]);
+
+// 📈 CHART
+const chartData = {
+labels: history.map(
+(_, i) => i + 1
+),
+
+```
+datasets: [
+  {
+    label: "Price History",
+    data: history,
+    borderColor:
+      "rgb(75,192,192)",
+    backgroundColor:
+      "rgba(75,192,192,0.2)",
+    tension: 0.4,
+  },
+],
+```
+
+};
+
+return (
+
+```
 <div
   style={{
-    marginBottom: 30,
+    padding: 30,
+    minHeight: "100vh",
+    background: darkMode
+      ? "#111"
+      : "#fff",
+    color: darkMode
+      ? "#fff"
+      : "#000",
   }}
 >
 
-  <h2>
-    👤 Account
-  </h2>
-
-  <input
-    type="email"
-    placeholder="Email"
-    value={email}
-    onChange={(e) =>
-      setEmail(
-        e.target.value
-      )
-    }
-  />
-
-  <br />
-  <br />
-
-  <input
-    type="password"
-    placeholder="Password"
-    value={password}
-    onChange={(e) =>
-      setPassword(
-        e.target.value
-      )
-    }
-  />
-
-  <br />
-  <br />
+  <h1>
+    📈 Live Stock Analyzer
+  </h1>
 
   <button
-    onClick={signup}
+    onClick={() =>
+      setDarkMode(!darkMode)
+    }
   >
-    Sign Up
+    Toggle Theme
   </button>
 
-  <button
-    onClick={login}
+  <br />
+  <br />
+
+  {/* 👤 LOGIN */}
+  <div
     style={{
-      marginLeft: 10,
+      marginBottom: 30,
+      padding: 20,
+      borderRadius: 15,
+      background: darkMode
+        ? "#1e1e1e"
+        : "#f5f5f5",
+      maxWidth: 450,
     }}
   >
-    Login
-  </button>
 
-  {loggedIn && (
+    <h2>
+      👤 Account
+    </h2>
 
-    <p>
-      ✅ Logged In
-    </p>
+    {user ? (
 
-  )}
+      <div>
 
-</div>
-      <button
-        onClick={() =>
-          setDarkMode(
-            !darkMode
-          )
-        }
-      >
-        Toggle Theme
-      </button>
+        <p>
+          Logged in as:
+        </p>
 
-      <br />
-      <br />
+        <strong>
+          {user.email}
+        </strong>
+
+        <br />
+        <br />
+
+        <button
+          onClick={logout}
+        >
+          Logout
+        </button>
+
+      </div>
+
+    ) : (
+
+      <>
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) =>
+            setEmail(
+              e.target.value
+            )
+          }
+          style={{
+            width: "100%",
+            padding: 12,
+            marginBottom: 15,
+          }}
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) =>
+            setPassword(
+              e.target.value
+            )
+          }
+          style={{
+            width: "100%",
+            padding: 12,
+            marginBottom: 15,
+          }}
+        />
+
+        <button
+          onClick={signup}
+        >
+          {
+            loading
+              ? "Loading..."
+              : "Sign Up"
+          }
+        </button>
+
+        <button
+          onClick={login}
+          style={{
+            marginLeft: 10,
+          }}
+        >
+          {
+            loading
+              ? "Loading..."
+              : "Login"
+          }
+        </button>
+
+      </>
+
+    )}
+
+    {authMessage && (
+
+      <p>
+        {authMessage}
+      </p>
+
+    )}
+
+  </div>
+
+  {/* 🔍 STOCK SEARCH */}
+  {user ? (
+
+    <>
 
       <input
         placeholder="Enter Stock Symbol"
@@ -650,428 +804,318 @@ const login = async () => {
           ])
         }
       >
-        Add to Watchlist
+        Add Watchlist
       </button>
 
-      <br />
-      <br />
+    </>
 
-      {/* 🔔 ALERTS */}
-      <input
-        type="number"
-        placeholder="Alert Price"
-        value={alertPrice}
-        onChange={(e) =>
-          setAlertPrice(
-            e.target.value
-          )
-        }
-      />
+  ) : (
 
-      <button
-        onClick={() => {
+    <p>
+      Please login to analyze stocks.
+    </p>
 
-          if (
-            !symbol ||
-            !alertPrice
-          )
-            return;
+  )}
 
-          const newAlert = {
-            symbol:
-              symbol.toUpperCase(),
-
-            target:
-              Number(
-                alertPrice
-              ),
-          };
-
-          setAlerts([
-            ...alerts,
-            newAlert,
-          ]);
-
-          alert(
-            `Alert set for ${symbol} at ₹${alertPrice}`
-          );
-
-          setAlertPrice("");
-        }}
-      >
-        Set Alert
-      </button>
-
-      {/* 📊 RESULTS */}
-      {data && (
-
-        <div
-          style={{
-            marginTop: 20,
-          }}
-        >
-
-          <h2>
-            {data.symbol}
-          </h2>
-
-          <h3>
-            Price: ₹
-            {data.price}
-          </h3>
-
-          <h3>
-            Change:
-            {" "}
-            {data.change}%
-          </h3>
-
-          <h3>
-            Recommendation:
-            {" "}
-            {
-              data.recommendation
-            }
-          </h3>
-
-          {/* 🤖 AI */}
-          <div
-            style={{
-              marginTop: 20,
-              padding: 20,
-              borderRadius: 10,
-
-              background:
-                darkMode
-                  ? "#222"
-                  : "#f5f5f5",
-            }}
-          >
-
-            <h2>
-              🤖 AI Prediction
-            </h2>
-
-            <h3>
-              {
-                prediction
-              }
-            </h3>
-
-            <p>
-              Confidence:
-              {" "}
-              {
-                confidence
-              }%
-            </p>
-
-            <h3>
-              RSI:
-              {" "}
-              {rsi}
-            </h3>
-
-            <p>
-              {rsi > 70
-                ? "Overbought 🔥"
-                : rsi < 30
-                ? "Oversold ❄️"
-                : "Neutral"}
-            </p>
-
-            <h3>
-              5-Day MA:
-              {" "}
-              {ma}
-            </h3>
-
-            <h3>
-              News Sentiment:
-              {" "}
-              {
-                sentiment
-              }
-            </h3>
-
-          </div>
-
-          {/* 📈 CHART */}
-          {history.length >
-          0 ? (
-
-            <div
-              style={{
-                width: "700px",
-                maxWidth:
-                  "100%",
-
-                marginTop: 20,
-
-                background:
-                  "#fff",
-
-                padding: 20,
-
-                borderRadius: 10,
-              }}
-            >
-
-              <Line
-                data={
-                  chartData
-                }
-                options={{
-                  responsive: true,
-                }}
-              />
-
-            </div>
-
-          ) : (
-
-            <p>
-              No chart data
-              available
-            </p>
-
-          )}
-
-          {/* 📰 NEWS */}
-          <div
-            style={{
-              marginTop: 30,
-            }}
-          >
-
-            <h2>
-              📰 Latest
-              Stock News
-            </h2>
-
-            <div
-  style={{
-    marginTop: 40,
-    padding: 20,
-    borderRadius: 10,
-    background:
-      darkMode
-        ? "#222"
-        : "#f5f5f5",
-  }}
->
-
-  <h2>
-    🤖 AI Stock Assistant
-  </h2>
-
-  <input
-    type="text"
-    placeholder="Ask AI about this stock..."
-    value={question}
-    onChange={(e) =>
-      setQuestion(
-        e.target.value
-      )
-    }
-    style={{
-      width: "70%",
-      padding: 10,
-      marginRight: 10,
-    }}
-  />
-
-  <button
-    onClick={askAI}
-  >
-    Ask AI
-  </button>
-
-  {aiAnswer && (
+  {/* 📊 STOCK DATA */}
+  {data && (
 
     <div
       style={{
-        marginTop: 20,
-        padding: 15,
-        borderRadius: 10,
-        background:
-          darkMode
-            ? "#333"
-            : "#fff",
+        marginTop: 30,
       }}
     >
 
+      <h2>
+        {data.symbol}
+      </h2>
+
       <h3>
-        AI Response
+        Price: ₹{data.price}
       </h3>
 
-      <p>
-        {aiAnswer}
-      </p>
+      <h3>
+        Change: {data.change}%
+      </h3>
+
+      <h3>
+        Recommendation:
+        {" "}
+        {data.recommendation}
+      </h3>
+
+      {/* 🤖 AI ANALYSIS */}
+      <div
+        style={{
+          marginTop: 20,
+          padding: 20,
+          borderRadius: 10,
+          background: darkMode
+            ? "#222"
+            : "#f5f5f5",
+        }}
+      >
+
+        <h2>
+          🤖 AI Prediction
+        </h2>
+
+        <h3>
+          {prediction}
+        </h3>
+
+        <p>
+          Confidence:
+          {" "}
+          {confidence}%
+        </p>
+
+        <h3>
+          RSI: {rsi}
+        </h3>
+
+        <h3>
+          5-Day MA: {ma}
+        </h3>
+
+        <h3>
+          News Sentiment:
+          {" "}
+          {sentiment}
+        </h3>
+
+      </div>
+
+      {/* 📈 CHART */}
+      {history.length > 0 ? (
+
+        <div
+          style={{
+            marginTop: 30,
+            background: "#fff",
+            padding: 20,
+            borderRadius: 10,
+          }}
+        >
+
+          <Line
+            data={chartData}
+          />
+
+        </div>
+
+      ) : (
+
+        <p>
+          No chart data available
+        </p>
+
+      )}
+
+      {/* 🔔 ALERTS */}
+      <div
+        style={{
+          marginTop: 30,
+        }}
+      >
+
+        <h2>
+          🔔 Price Alerts
+        </h2>
+
+        <input
+          type="number"
+          placeholder="Alert Price"
+          value={alertPrice}
+          onChange={(e) =>
+            setAlertPrice(
+              e.target.value
+            )
+          }
+        />
+
+        <button
+          onClick={() => {
+
+            if (
+              !symbol ||
+              !alertPrice
+            ) return;
+
+            const newAlert = {
+              symbol:
+                symbol.toUpperCase(),
+
+              target:
+                Number(alertPrice),
+            };
+
+            setAlerts([
+              ...alerts,
+              newAlert,
+            ]);
+
+            setAlertPrice("");
+          }}
+        >
+          Set Alert
+        </button>
+
+      </div>
+
+      {/* 📰 NEWS */}
+      <div
+        style={{
+          marginTop: 40,
+        }}
+      >
+
+        <h2>
+          📰 Latest Stock News
+        </h2>
+
+        {news.length > 0 ? (
+
+          news
+            .slice(0, 5)
+            .map(
+              (
+                article,
+                index
+              ) => (
+
+                <div
+                  key={index}
+                  style={{
+                    marginBottom: 20,
+                    padding: 15,
+                    border:
+                      "1px solid #ccc",
+                    borderRadius: 10,
+                  }}
+                >
+
+                  <h3>
+                    {article.title}
+                  </h3>
+
+                  <a
+                    href={article.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Read Article →
+                  </a>
+
+                </div>
+              )
+            )
+
+        ) : (
+
+          <p>
+            No news available
+          </p>
+
+        )}
+
+      </div>
+
+      {/* 🤖 AI ASSISTANT */}
+      <div
+        style={{
+          marginTop: 40,
+          padding: 20,
+          borderRadius: 10,
+          background: darkMode
+            ? "#222"
+            : "#f5f5f5",
+        }}
+      >
+
+        <h2>
+          🤖 AI Assistant
+        </h2>
+
+        <input
+          type="text"
+          placeholder="Ask AI about this stock"
+          value={question}
+          onChange={(e) =>
+            setQuestion(
+              e.target.value
+            )
+          }
+          style={{
+            width: "70%",
+            padding: 10,
+          }}
+        />
+
+        <button
+          onClick={askAI}
+          style={{
+            marginLeft: 10,
+          }}
+        >
+          Ask AI
+        </button>
+
+        {aiAnswer && (
+
+          <div
+            style={{
+              marginTop: 20,
+              padding: 15,
+              borderRadius: 10,
+              background: darkMode
+                ? "#333"
+                : "#fff",
+            }}
+          >
+
+            <p>
+              {aiAnswer}
+            </p>
+
+          </div>
+
+        )}
+
+      </div>
 
     </div>
 
   )}
 
-</div>
+  {/* ⭐ WATCHLIST */}
+  <div
+    style={{
+      marginTop: 40,
+    }}
+  >
 
-            {news.length >
-            0 ? (
+    <h2>
+      ⭐ Watchlist
+    </h2>
 
-              news
-                .slice(0, 5)
-                .map(
-                  (
-                    article,
-                    index
-                  ) => (
-
-                    <div
-                      key={
-                        index
-                      }
-                      style={{
-                        marginBottom:
-                          20,
-
-                        padding:
-                          15,
-
-                        border:
-                          "1px solid #ccc",
-
-                        borderRadius:
-                          10,
-                      }}
-                    >
-
-                      {article.urlToImage && (
-
-                        <img
-                          src={
-                            article.urlToImage
-                          }
-                          alt="news"
-                          style={{
-                            width:
-                              "100%",
-
-                            maxHeight:
-                              200,
-
-                            objectFit:
-                              "cover",
-
-                            borderRadius:
-                              10,
-                          }}
-                        />
-
-                      )}
-
-                      <h3>
-                        {
-                          article.title
-                        }
-                      </h3>
-
-                      <p>
-                        {
-                          article
-                            .source
-                            ?.name
-                        }
-                      </p>
-
-                      <a
-                        href={
-                          article.url
-                        }
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Read
-                        Article →
-                      </a>
-
-                    </div>
-                  )
-                )
-
-            ) : (
-
-              <p>
-                No news
-                available
-              </p>
-
-            )}
-
-          </div>
-
-        </div>
+    <ul>
+      {watchlist.map(
+        (
+          item,
+          index
+        ) => (
+          <li key={index}>
+            {item}
+          </li>
+        )
       )}
+    </ul>
 
-      {/* ⭐ WATCHLIST */}
-      <div
-        style={{
-          marginTop: 30,
-        }}
-      >
+  </div>
 
-        <h2>
-          ⭐ Watchlist
-        </h2>
+</div>
+```
 
-        <ul>
-          {watchlist.map(
-            (
-              item,
-              index
-            ) => (
-              <li key={index}>
-                {item}
-              </li>
-            )
-          )}
-        </ul>
-
-      </div>
-
-      {/* 🔔 ALERTS LIST */}
-      <div
-        style={{
-          marginTop: 30,
-        }}
-      >
-
-        <h2>
-          🔔 Alerts
-        </h2>
-
-        <ul>
-          {alerts.map(
-            (
-              item,
-              index
-            ) => (
-              <li key={index}>
-                {
-                  item.symbol
-                }
-                {" "}
-                →
-                ₹
-                {
-                  item.target
-                }
-              </li>
-            )
-          )}
-        </ul>
-
-      </div>
-
-    </div>
-  );
+);
 }
