@@ -26,8 +26,14 @@ app.get("/api/stock/:symbol", async (req, res) => {
 
       const response =
         await axios.get(
-          `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`
-        );
+  `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`,
+  {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0",
+    },
+  }
+);
 
       const result =
         response.data?.chart?.result?.[0];
@@ -85,7 +91,7 @@ app.get("/api/stock/:symbol", async (req, res) => {
           params: {
             symbol,
             apikey:
-              "YOUR_TWELVEDATA_API_KEY",
+              "aaf7843c99e64f0d8a388c0ad4e736c7",
           },
         }
       );
@@ -158,8 +164,14 @@ app.get("/api/history/:symbol", async (req, res) => {
         symbol.replace(":NSE", ".NS");
 
       const response = await axios.get(
-        `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?range=1mo&interval=1d`
-      );
+  `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?range=1mo&interval=1d`,
+  {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0",
+    },
+  }
+);
 
       const prices =
         response.data.chart.result[0]
