@@ -30,13 +30,14 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
 
   // 🚀 SMART STOCK FETCHER
-const fetchStock = async (loadHistory = false) => {
+const fetchStock = async (loadHistory = true) => {
   try {
     if (!symbol) return;
 
-    let formattedSymbol = symbol.trim().toUpperCase();
+    let formattedSymbol =
+      symbol.trim().toUpperCase();
 
-    // 🇮🇳 Common Indian stocks
+    // 🇮🇳 Indian stock list
     const indianStocks = [
       "TCS",
       "RELIANCE",
@@ -55,46 +56,45 @@ const fetchStock = async (loadHistory = false) => {
       "HCLTECH",
     ];
 
-    // ✅ Force NSE for Indian stocks
+    // ✅ Add NSE automatically
     if (
       indianStocks.includes(formattedSymbol)
     ) {
-      formattedSymbol = `${formattedSymbol}:NSE`;
+      formattedSymbol =
+        `${formattedSymbol}:NSE`;
     }
 
-    // ₿ Crypto support
-    if (formattedSymbol === "BTC") {
-      formattedSymbol = "BTC/USD";
-    }
-
-    if (formattedSymbol === "ETH") {
-      formattedSymbol = "ETH/USD";
-    }
-
-    // 📊 STOCK API
+    // 📈 STOCK DATA
     const stockRes = await axios.get(
-      "https://stock-analysis-81hr.onrender.com/api/stock/" +
-        formattedSymbol
+      `https://stock-analysis-81hr.onrender.com/api/stock/${formattedSymbol}`
     );
 
     setData(stockRes.data);
 
-    // 📈 HISTORY API
+    // 📊 HISTORY DATA
     if (loadHistory) {
-      const historyRes = await axios.get(
-        "https://stock-analysis-81hr.onrender.com/api/history/" +
-          formattedSymbol
-      );
 
-      const cleanData = Array.isArray(historyRes.data?.c)
-        ? historyRes.data.c
-        : [];
+      const historyRes =
+        await axios.get(
+          `https://stock-analysis-81hr.onrender.com/api/history/${formattedSymbol}`
+        );
 
-      setHistory(cleanData);
+      const cleanHistory =
+        Array.isArray(historyRes.data.c)
+          ? historyRes.data.c.filter(
+              (item) =>
+                item !== null
+            )
+          : [];
+
+      setHistory(cleanHistory);
     }
 
   } catch (err) {
-    console.error(err);
+
+    console.error(
+      err.response?.data || err.message
+    );
 
     alert("Stock not found");
   }
