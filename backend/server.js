@@ -63,16 +63,6 @@ app.get("/api/stock/:symbol", async (req, res) => {
     res.status(500).json({ error: "Stock API error" });
   }
 });
-import express from "express";
-import cors from "cors";
-import axios from "axios";
-import OpenAI from "openai";
-import cron from "node-cron";
-import nodemailer from "nodemailer";
-
-const app = express();
-app.use(cors());
-app.use(express.json());
 
 // ---------------- OPENAI ----------------
 const openai = new OpenAI({
