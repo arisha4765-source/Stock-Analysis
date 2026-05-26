@@ -7,33 +7,31 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ================= OPENAI =================
+// ---------------- OPENAI ----------------
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY ,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-// ================= STOCK API (TWELVE DATA) =================
+// ---------------- STOCK FORMAT ----------------
+const formatSymbol = (symbol) => {
+  symbol = symbol.toUpperCase();
+
+  const india = ["TCS", "INFY", "RELIANCE", "SBIN"];
+
+  if (india.includes(symbol)) {
+    return symbol + ".NSE";
+  }
+
+  return symbol;
+};
+
+// ---------------- STOCK API ----------------
 app.get("/api/stock/:symbol", async (req, res) => {
   try {
-    let symbol = req.params.symbol.toUpperCase();
-
-    // Indian stock mapping
-    const indianMap = {
-      TCS: "TCS",
-      RELIANCE: "RELIANCE",
-      INFY: "INFY",
-      SBIN: "SBIN",
-    };
-
-    if (indianMap[symbol]) {
-      symbol = indianMap[symbol];
-    }
+    const symbol = formatSymbol(req.params.symbol);
 
     const url =
-      "https://api.twelvedata.com/quote?symbol=" +
-      symbol +
-      "&apikey=" +
-      process.env.TWELVE_DATA_API_KEY;
+      `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`;
 
     const response = await axios.get(url);
 
@@ -44,30 +42,24 @@ app.get("/api/stock/:symbol", async (req, res) => {
     res.json({
       symbol: response.data.symbol,
       price: response.data.close,
-      change: response.data.change,
-      percent: response.data.percent_change,
     });
   } catch (err) {
-    res.status(500).json({ error: "API error" });
+    res.status(500).json({ error: "Stock API error" });
   }
 });
 
-// ================= HISTORY (for charts) =================
+// ---------------- HISTORY (CHART) ----------------
 app.get("/api/history/:symbol", async (req, res) => {
   try {
-    const symbol = req.params.symbol.toUpperCase();
+    const symbol = formatSymbol(req.params.symbol);
 
     const url =
-      "https://api.twelvedata.com/time_series?symbol=" +
-      symbol +
-      "&interval=1day&outputsize=30&apikey=" +
-      process.env.TWELVE_DATA_API_KEY;
+      `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${process.env.TWELVE_DATA_API_KEY}`;
 
     const response = await axios.get(url);
 
-    const values = response.data.values || [];
-
-    const prices = values.map((v) => Number(v.close)).reverse();
+    const prices =
+      response.data.values?.map((v) => Number(v.close)).reverse() || [];
 
     res.json({ prices });
   } catch (err) {
@@ -75,35 +67,36 @@ app.get("/api/history/:symbol", async (req, res) => {
   }
 });
 
-// ================= AI =================
+// ---------------- AI ASSISTANT ----------------
 app.post("/api/ai", async (req, res) => {
   try {
-    const { symbol, price, question } = req.body;
+    const { symbol, price, history, question } = req.body;
+
+    const prompt = `
+You are a stock market expert.
+
+Stock: ${symbol}
+Price: ${price}
+Recent trend: ${history?.slice(-5).join(", ")}
+User question: ${question}
+
+Give:
+- Buy / Hold / Sell
+- Reason
+- Risk level
+`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "user",
-          content:
-            "You are a stock expert.\n" +
-            "Stock: " +
-            symbol +
-            "\nPrice: " +
-            price +
-            "\nQuestion: " +
-            question,
-        },
-      ],
+      messages: [{ role: "user", content: prompt }],
     });
 
-    res.json({
-      answer: response.choices[0].message.content,
-    });
+    res.json({ answer: response.choices[0].message.content });
   } catch (err) {
     res.status(500).json({ error: "AI error" });
   }
 });
 
+// ---------------- START ----------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log("Server running on " + PORT));
