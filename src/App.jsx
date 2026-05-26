@@ -10,7 +10,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-
 export default function App() {
   const [symbol, setSymbol] = useState("");
   const [data, setData] = useState(null);
@@ -50,10 +49,44 @@ const signIn = async () => {
       symbol,
     },
   ]);
+    {!user ? (
+  <div>
+    <h2>Login</h2>
+
+    <input placeholder="email" onChange={(e) => setEmail(e.target.value)} />
+    <input placeholder="password" type="password" onChange={(e) => setPassword(e.target.value)} />
+
+    <button onClick={signIn}>Login</button>
+    <button onClick={signUp}>Sign Up</button>
+  </div>
+) : (
 
   loadWatchlist();
 };
 
+  const loadWatchlist = async () => {
+  const { data } = await supabase
+    .from("watchlist")
+    .select("*")
+    .eq("user_id", user.id);
+
+  setWatchlist(data);
+};
+
+  useEffect(() => {
+  if (user) loadWatchlist();
+}, [user]);
+<div>
+  <h3>⭐ Watchlist</h3>
+
+  {watchlist.map((item) => (
+    <p key={item.id}>{item.symbol}</p>
+  ))}
+
+  <button onClick={() => addToWatchlist(symbol)}>
+    + Add Current Stock
+  </button>
+</div>
   const parseSignal = (text) => {
   if (!text) return "⚪ UNKNOWN";
 
