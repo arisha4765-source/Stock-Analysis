@@ -9,14 +9,19 @@ export default function App() {
   const [aiAnswer, setAiAnswer] = useState("");
 
   // ================= STOCK =================
-  const fetchStock = async () => {
-    const res = await axios.get(
-      "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
-    );
+ const fetchStock = async () => {
+  const res = await axios.get(
+    "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
+  );
 
-    setData(res.data);
-  };
+  setData(res.data);
 
+  const historyRes = await axios.get(
+    "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
+  );
+
+  setHistory(historyRes.data.prices || []);
+};
   // ================= AI =================
   const askAI = async () => {
     const res = await axios.post(
