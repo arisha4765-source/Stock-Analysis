@@ -21,36 +21,44 @@ app.get("/api/stock/:symbol", async (req, res) => {
   try {
     const symbol = req.params.symbol.toUpperCase();
 
-    // ✅ TWELVE DATA QUOTE API
     const response = await axios.get(
       "https://api.twelvedata.com/quote",
       {
         params: {
           symbol,
-          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7",
+          apikey: "YOUR_TWELVEDATA_API_KEY",
         },
       }
     );
 
     const stock = response.data;
 
-    // ❌ INVALID STOCK
-    if (!stock || !stock.close) {
+    console.log(stock);
+
+    // ❌ API returned error
+    if (stock.status === "error") {
       return res.status(404).json({
-        error: "Stock not found",
+        error: stock.message || "Stock not found",
       });
     }
 
-    const price = parseFloat(stock.close);
+    // ✅ HANDLE DIFFERENT PRICE FIELDS
+    const price = parseFloat(
+      stock.close ||
+      stock.price ||
+      stock.previous_close ||
+      0
+    );
 
-    const previousClose = parseFloat(stock.previous_close || price);
+    const previousClose = parseFloat(
+      stock.previous_close || price
+    );
 
     const change = (
       ((price - previousClose) / previousClose) *
       100
     ).toFixed(2);
 
-    // 🧠 SIMPLE RECOMMENDATION ENGINE
     let recommendation = "HOLD";
 
     if (change > 2) {
