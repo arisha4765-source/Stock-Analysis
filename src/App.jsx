@@ -17,6 +17,10 @@ export default function App() {
   const [history, setHistory] = ([]);
   const [question, setQuestion] = useState("");
   const [aiAnswer, setAiAnswer] = useState("");
+  const [user, setUser] = useState(null);
+const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
+const [watchlist, setWatchlist] = useState([]);
 
   const parseSignal = (text) => {
   if (!text) return "⚪ UNKNOWN";
