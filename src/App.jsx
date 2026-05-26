@@ -1,15 +1,22 @@
 import React, { useState } from "react";
 import axios from "axios";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function App() {
   const [symbol, setSymbol] = useState("");
   const [data, setData] = useState(null);
   const [history, setHistory] = useState([]);
-
   const [question, setQuestion] = useState("");
   const [aiAnswer, setAiAnswer] = useState("");
 
-  // ---------------- STOCK ----------------
+  // ---------------- FETCH STOCK ----------------
   const fetchStock = async () => {
     const res = await axios.get(
       "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
@@ -21,7 +28,12 @@ export default function App() {
       "https://stock-analysis-81hr.onrender.com/api/history/" + symbol
     );
 
-    setHistory(h.data.prices);
+    setHistory(
+      h.data.prices.map((p, i) => ({
+        time: i,
+        price: p,
+      }))
+    );
   };
 
   // ---------------- AI ----------------
@@ -31,7 +43,7 @@ export default function App() {
       {
         symbol: data.symbol,
         price: data.price,
-        history,
+        history: history.map((h) => h.price),
         question,
       }
     );
@@ -40,46 +52,64 @@ export default function App() {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>📊 Stock AI Dashboard</h1>
+    <div style={{ display: "flex", height: "100vh", background: "#0f0f0f", color: "white" }}>
 
-      {/* INPUT */}
-      <input
-        placeholder="Enter stock (TCS, AAPL, INFY)"
-        onChange={(e) => setSymbol(e.target.value)}
-      />
-      <button onClick={fetchStock}>Search</button>
+      {/* SIDEBAR */}
+      <div style={{ width: 260, padding: 20, background: "#111" }}>
+        <h2>📊 Trading AI</h2>
 
-      {/* STOCK INFO */}
-      {data && (
-        <div>
-          <h2>{data.symbol}</h2>
-          <p>Price: {data.price}</p>
-        </div>
-      )}
+        <input
+          placeholder="Enter stock (TCS, AAPL)"
+          style={{ width: "100%", padding: 8 }}
+          onChange={(e) => setSymbol(e.target.value)}
+        />
 
-      {/* CHART */}
-      {history.length > 0 && (
-        <div>
-          <h3>📈 Chart Data</h3>
-          {history.map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
-        </div>
-      )}
+        <button onClick={fetchStock} style={{ width: "100%", marginTop: 10 }}>
+          Search
+        </button>
 
-      {/* AI */}
-      <div style={{ marginTop: 20 }}>
-        <h3>🤖 AI Assistant</h3>
+        {data && (
+          <div style={{ marginTop: 20 }}>
+            <h3>{data.symbol}</h3>
+            <p>Price: {data.price}</p>
+          </div>
+        )}
+      </div>
+
+      {/* MAIN CHART AREA */}
+      <div style={{ flex: 1, padding: 20 }}>
+        <h2>Market Chart</h2>
+
+        {history.length > 0 && (
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={history}>
+              <XAxis dataKey="time" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="price" stroke="#00ff88" />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      {/* AI PANEL */}
+      <div style={{ width: 320, padding: 20, background: "#111" }}>
+        <h3>🤖 AI Analyst</h3>
 
         <textarea
-          placeholder="Ask (buy/sell/hold?)"
+          style={{ width: "100%", height: 100 }}
+          placeholder="Ask: Buy or Sell?"
           onChange={(e) => setQuestion(e.target.value)}
         />
 
-        <button onClick={askAI}>Ask AI</button>
+        <button onClick={askAI} style={{ width: "100%", marginTop: 10 }}>
+          Ask AI
+        </button>
 
-        <p>{aiAnswer}</p>
+        <div style={{ marginTop: 20 }}>
+          <b>AI Response:</b>
+          <p>{aiAnswer}</p>
+        </div>
       </div>
     </div>
   );
