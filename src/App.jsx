@@ -480,6 +480,11 @@ alerts.forEach((item) => {
           <h3>
             Recommendation:
             <div
+                {" "}
+            {
+              data.recommendation
+            }
+          </h3>
   style={{
     marginTop: 20,
     padding: 20,
@@ -506,11 +511,6 @@ alerts.forEach((item) => {
   </p>
 
 </div>
-            {" "}
-            {
-              data.recommendation
-            }
-          </h3>
 
           {/* 📈 CHART */}
           {history.length >
