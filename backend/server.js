@@ -14,36 +14,56 @@ app.get("/", (req, res) => {
 // 📈 STOCK API
 app.get("/api/stock/:symbol", async (req, res) => {
   try {
-    let symbol = req.params.symbol.toUpperCase();
 
-    // 🇮🇳 INDIAN STOCKS USING YAHOO API
+    let symbol =
+      req.params.symbol.toUpperCase();
+
+    // 🇮🇳 INDIAN STOCKS
     if (symbol.includes(":NSE")) {
 
       const yahooSymbol =
         symbol.replace(":NSE", ".NS");
 
-      const response = await axios.get(
-        `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`
-      );
+      const response =
+        await axios.get(
+          `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`
+        );
 
       const result =
-        response.data.chart.result[0].meta;
+        response.data?.chart?.result?.[0];
+
+      if (!result) {
+        return res.status(404).json({
+          error: "Indian stock not found",
+        });
+      }
+
+      const meta = result.meta;
 
       const price =
-        result.regularMarketPrice;
+        meta.regularMarketPrice;
 
       const previous =
-        result.previousClose;
+        meta.previousClose;
+
+      if (!price || !previous) {
+        return res.status(404).json({
+          error: "No stock data",
+        });
+      }
 
       const change = (
-        ((price - previous) / previous) *
+        ((price - previous) /
+          previous) *
         100
       ).toFixed(2);
 
-      let recommendation = "HOLD";
+      let recommendation =
+        "HOLD";
 
       if (change > 2)
-        recommendation = "STRONG BUY";
+        recommendation =
+          "STRONG BUY";
       else if (change > 0)
         recommendation = "BUY";
       else if (change < -2)
@@ -57,16 +77,18 @@ app.get("/api/stock/:symbol", async (req, res) => {
       });
     }
 
-    // 🇺🇸 US STOCKS → TWELVE DATA
-    const response = await axios.get(
-      "https://api.twelvedata.com/quote",
-      {
-        params: {
-          symbol,
-          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7",
-        },
-      }
-    );
+    // 🇺🇸 US STOCKS
+    const response =
+      await axios.get(
+        "https://api.twelvedata.com/quote",
+        {
+          params: {
+            symbol,
+            apikey:
+              "YOUR_TWELVEDATA_API_KEY",
+          },
+        }
+      );
 
     const stock = response.data;
 
@@ -76,21 +98,28 @@ app.get("/api/stock/:symbol", async (req, res) => {
       });
     }
 
-    const price = parseFloat(stock.close);
-
-    const previousClose = parseFloat(
-      stock.previous_close || price
+    const price = parseFloat(
+      stock.close
     );
 
+    const previousClose =
+      parseFloat(
+        stock.previous_close ||
+          price
+      );
+
     const change = (
-      ((price - previousClose) / previousClose) *
+      ((price - previousClose) /
+        previousClose) *
       100
     ).toFixed(2);
 
-    let recommendation = "HOLD";
+    let recommendation =
+      "HOLD";
 
     if (change > 2)
-      recommendation = "STRONG BUY";
+      recommendation =
+        "STRONG BUY";
     else if (change > 0)
       recommendation = "BUY";
     else if (change < -2)
@@ -104,7 +133,12 @@ app.get("/api/stock/:symbol", async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err.message);
+
+    console.error(
+      "SERVER ERROR:",
+      err.response?.data ||
+      err.message
+    );
 
     res.status(500).json({
       error: "API error",
