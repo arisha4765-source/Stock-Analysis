@@ -1,106 +1,68 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 export default function App() {
   const [symbol, setSymbol] = useState("");
   const [data, setData] = useState(null);
-  const [aiAnswer, setAiAnswer] = useState("");
-const fetchStock = async () => {
-  if (!symbol) return;
 
-  try {
-    const res = await fetch(
-      "https://stock-analysis-81hr.onrender.com/api/stock/" +
-        symbol.toUpperCase()
+  const [question, setQuestion] = useState("");
+  const [aiAnswer, setAiAnswer] = useState("");
+
+  // ================= STOCK =================
+  const fetchStock = async () => {
+    const res = await axios.get(
+      "https://stock-analysis-81hr.onrender.com/api/stock/" + symbol
     );
 
-    const json = await res.json();
-    setData(json);
-  } catch (err) {
-    console.log(err);
-    alert("Stock not found");
-  }
-};
-  return (
-    <div style={{ display: "flex", height: "100vh" }}>
+    setData(res.data);
+  };
 
-      {/* SIDEBAR */}
-      <div style={{ width: "250px", background: "#111", color: "#fff", padding: 20 }}>
-        <h2>📊 Stock App</h2>
-
-        <input
-          placeholder="Search stock"
-          value={symbol}
-          onChange={(e) => setSymbol(e.target.value)}
-          style={{ width: "100%", marginTop: 10 }}
-        />
-
-        <button
-  style={{ width: "100%", marginTop: 10 }}
-  onClick={fetchStock}
->
-  Search
-</button>
-        <hr />
-
-        <p>📌 Watchlist</p>
-        <p>🔔 Alerts</p>
-        <p>🤖 AI Assistant</p>
-      </div>
-
-      {/* MAIN AREA */}
-      <div style={{ flex: 1, padding: 20 }}>
-
-        <h1>Dashboard</h1>
-
-        {data ? (
-          <div>
-            <h2>{data.symbol}</h2>
-            <p>Price: {data.price}</p>
-          </div>
-        ) : (
-          <p>Search a stock to begin</p>
-        )}
-      </div>
-
-      {/* AI PANEL */}
-      <div style={{ width: "300px", background: "#f4f4f4", padding: 20 }}>
-        <h3>🤖 AI Assistant</h3>
-const [question, setQuestion] = useState("");
-        <textarea
-  value={question}
-  onChange={(e) => setQuestion(e.target.value)}
-  placeholder="Ask something..."
-  style={{ width: "100%", height: "100px" }}
-/>
-        POST /api/ai
-        const askAI = async () => {
-  try {
-    const res = await fetch(
+  // ================= AI =================
+  const askAI = async () => {
+    const res = await axios.post(
       "https://stock-analysis-81hr.onrender.com/api/ai",
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question,
-          symbol: data?.symbol,
-          price: data?.price,
-        }),
+        symbol: data?.symbol,
+        price: data?.price,
+        question,
       }
     );
 
-    const json = await res.json();
-    setAiAnswer(json.answer);
-  } catch (err) {
-    setAiAnswer("AI error");
-  }
-};
-        <button style={{ width: "100%", marginTop: 10 }} onClick={askAI}>
-  Ask AI
-</button>
+    setAiAnswer(res.data.answer);
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h1>Stock AI Dashboard</h1>
+
+      {/* SEARCH */}
+      <input
+        placeholder="Stock symbol"
+        onChange={(e) => setSymbol(e.target.value)}
+      />
+      <button onClick={fetchStock}>Search</button>
+
+      {/* STOCK DATA */}
+      {data && (
+        <div>
+          <h2>{data.symbol}</h2>
+          <p>Price: {data.price}</p>
+        </div>
+      )}
+
+      {/* AI */}
+      <div style={{ marginTop: 20 }}>
+        <h3>AI Assistant</h3>
+
+        <textarea
+          placeholder="Ask question"
+          onChange={(e) => setQuestion(e.target.value)}
+        />
+
+        <button onClick={askAI}>Ask AI</button>
 
         <p>{aiAnswer}</p>
       </div>
-
     </div>
   );
 }
