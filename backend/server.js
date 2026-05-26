@@ -1,54 +1,79 @@
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
+const yahooFinance = require("yahoo-finance2").default;
 
 const app = express();
 
-app.use(
-  cors({
-    origin: "*",
-  })
-);
-
+app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("Backend running");
 });
 
-// 📈 STOCK INFO API
+// 📈 STOCK API
 app.get("/api/stock/:symbol", async (req, res) => {
   try {
-    const symbol = req.params.symbol.toUpperCase();
+    let symbol = req.params.symbol.toUpperCase();
 
+    // 🇮🇳 Indian stocks → Yahoo Finance
+    if (symbol.includes(":NSE")) {
+
+      const yahooSymbol =
+        symbol.replace(":NSE", ".NS");
+
+      const result = await yahooFinance.quote(
+        yahooSymbol
+      );
+
+      const price = result.regularMarketPrice;
+
+      const previous =
+        result.regularMarketPreviousClose;
+
+      const change = (
+        ((price - previous) / previous) *
+        100
+      ).toFixed(2);
+
+      let recommendation = "HOLD";
+
+      if (change > 2)
+        recommendation = "STRONG BUY";
+      else if (change > 0)
+        recommendation = "BUY";
+      else if (change < -2)
+        recommendation = "SELL";
+
+      return res.json({
+        symbol,
+        price,
+        change,
+        recommendation,
+      });
+    }
+
+    // 🇺🇸 US STOCKS → Twelve Data
     const response = await axios.get(
       "https://api.twelvedata.com/quote",
       {
         params: {
           symbol,
-          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7",
+          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7,
         },
       }
     );
 
     const stock = response.data;
 
-    console.log(stock);
-
-    // ❌ API returned error
     if (stock.status === "error") {
       return res.status(404).json({
-        error: stock.message || "Stock not found",
+        error: stock.message,
       });
     }
 
-    // ✅ HANDLE DIFFERENT PRICE FIELDS
-    const price = parseFloat(
-      stock.close ||
-      stock.price ||
-      stock.previous_close ||
-      0
-    );
+    const price = parseFloat(stock.close);
 
     const previousClose = parseFloat(
       stock.previous_close || price
@@ -61,13 +86,12 @@ app.get("/api/stock/:symbol", async (req, res) => {
 
     let recommendation = "HOLD";
 
-    if (change > 2) {
+    if (change > 2)
       recommendation = "STRONG BUY";
-    } else if (change > 0) {
+    else if (change > 0)
       recommendation = "BUY";
-    } else if (change < -2) {
+    else if (change < -2)
       recommendation = "SELL";
-    }
 
     res.json({
       symbol,
@@ -77,7 +101,7 @@ app.get("/api/stock/:symbol", async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err.message);
+    console.error(err);
 
     res.status(500).json({
       error: "API error",
@@ -88,8 +112,32 @@ app.get("/api/stock/:symbol", async (req, res) => {
 // 📊 HISTORY API
 app.get("/api/history/:symbol", async (req, res) => {
   try {
-    const symbol = req.params.symbol.toUpperCase();
+    let symbol = req.params.symbol.toUpperCase();
 
+    // 🇮🇳 NSE STOCK HISTORY
+    if (symbol.includes(":NSE")) {
+
+      const yahooSymbol =
+        symbol.replace(":NSE", ".NS");
+
+      const result =
+        await yahooFinance.historical(
+          yahooSymbol,
+          {
+            period1: "2024-01-01",
+          }
+        );
+
+      const prices = result.map(
+        (item) => item.close
+      );
+
+      return res.json({
+        c: prices,
+      });
+    }
+
+    // 🇺🇸 US HISTORY → Twelve Data
     const response = await axios.get(
       "https://api.twelvedata.com/time_series",
       {
@@ -102,26 +150,26 @@ app.get("/api/history/:symbol", async (req, res) => {
       }
     );
 
-    const values = response.data?.values;
+    const values = response.data.values;
 
     if (!values) {
       return res.json({
         c: [],
-        error: "No history data",
       });
     }
 
-    // newest → oldest
     const closePrices = values
       .reverse()
-      .map((item) => parseFloat(item.close));
+      .map((item) =>
+        parseFloat(item.close)
+      );
 
     res.json({
       c: closePrices,
     });
 
   } catch (err) {
-    console.error(err.message);
+    console.error(err);
 
     res.status(500).json({
       c: [],
@@ -130,8 +178,11 @@ app.get("/api/history/:symbol", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT =
+  process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(
+    `Server running on port ${PORT}`
+  );
 });
