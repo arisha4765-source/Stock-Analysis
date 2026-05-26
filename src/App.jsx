@@ -30,85 +30,75 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
 
   // 🚀 SMART STOCK FETCHER
-  const fetchStock = async (loadHistory = false) => {
-    try {
-      if (!symbol) return;
+const fetchStock = async (loadHistory = false) => {
+  try {
+    if (!symbol) return;
 
-      let formattedSymbol = symbol.trim().toUpperCase();
+    let formattedSymbol = symbol.trim().toUpperCase();
 
-      // 🇮🇳 Indian indices
-      if (formattedSymbol === "NIFTY") {
-        formattedSymbol = "NIFTY:NSE";
-      }
+    // 🇮🇳 Common Indian stocks
+    const indianStocks = [
+      "TCS",
+      "RELIANCE",
+      "INFY",
+      "SBIN",
+      "ITC",
+      "HDFCBANK",
+      "WIPRO",
+      "ICICIBANK",
+      "LT",
+      "AXISBANK",
+      "BHARTIARTL",
+      "KOTAKBANK",
+      "ASIANPAINT",
+      "MARUTI",
+      "HCLTECH",
+    ];
 
-      if (formattedSymbol === "SENSEX") {
-        formattedSymbol = "SENSEX:BSE";
-      }
-
-      // ₿ Crypto support
-      if (formattedSymbol === "BTC") {
-        formattedSymbol = "BTC/USD";
-      }
-
-      if (formattedSymbol === "ETH") {
-        formattedSymbol = "ETH/USD";
-      }
-
-      let stockRes;
-
-      // 📈 TRY DEFAULT MARKET FIRST
-      try {
-        stockRes = await axios.get(
-          "https://stock-analysis-81hr.onrender.com/api/stock/" +
-            formattedSymbol
-        );
-
-        if (
-          !stockRes.data ||
-          stockRes.data.price === 0 ||
-          stockRes.data.price === null
-        ) {
-          throw new Error("Retry NSE");
-        }
-
-      } catch (err) {
-
-        // 🇮🇳 Retry as NSE stock
-        if (!formattedSymbol.includes(":")) {
-          formattedSymbol = `${formattedSymbol}:NSE`;
-
-          stockRes = await axios.get(
-            "https://stock-analysis-81hr.onrender.com/api/stock/" +
-              formattedSymbol
-          );
-        } else {
-          throw err;
-        }
-      }
-
-      // ✅ SET STOCK DATA
-      setData(stockRes.data);
-
-      // 📈 LOAD CHART HISTORY
-      if (loadHistory) {
-        const historyRes = await axios.get(
-          "https://stock-analysis-81hr.onrender.com/api/history/" +
-            formattedSymbol
-        );
-
-        const cleanData = Array.isArray(historyRes.data?.c)
-          ? historyRes.data.c
-          : [];
-
-        setHistory(cleanData);
-      }
-
-    } catch (err) {
-      console.error(err);
-
-      alert("Stock not found");
+    // ✅ Force NSE for Indian stocks
+    if (
+      indianStocks.includes(formattedSymbol)
+    ) {
+      formattedSymbol = `${formattedSymbol}:NSE`;
     }
-  };
+
+    // ₿ Crypto support
+    if (formattedSymbol === "BTC") {
+      formattedSymbol = "BTC/USD";
+    }
+
+    if (formattedSymbol === "ETH") {
+      formattedSymbol = "ETH/USD";
+    }
+
+    // 📊 STOCK API
+    const stockRes = await axios.get(
+      "https://stock-analysis-81hr.onrender.com/api/stock/" +
+        formattedSymbol
+    );
+
+    setData(stockRes.data);
+
+    // 📈 HISTORY API
+    if (loadHistory) {
+      const historyRes = await axios.get(
+        "https://stock-analysis-81hr.onrender.com/api/history/" +
+          formattedSymbol
+      );
+
+      const cleanData = Array.isArray(historyRes.data?.c)
+        ? historyRes.data.c
+        : [];
+
+      setHistory(cleanData);
+    }
+
+  } catch (err) {
+    console.error(err);
+
+    alert("Stock not found");
+  }
+};
 
   // ⚡ REAL-TIME UPDATES EVERY 5 SECONDS
  useEffect(() => {
