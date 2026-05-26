@@ -111,17 +111,15 @@ export default function App() {
   };
 
   // ⚡ REAL-TIME UPDATES EVERY 5 SECONDS
-  useEffect(() => {
-    if (!symbol) return;
+ useEffect(() => {
+  if (!symbol || !data) return;
 
-    fetchStock(true);
+  const interval = setInterval(() => {
+    fetchStock(false);
+  }, 30000);
 
-    const interval = setInterval(() => {
-      fetchStock(false);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [symbol]);
+  return () => clearInterval(interval);
+}, [symbol, data]);
 
   // 📊 CHART CONFIG
   const chartData = {
