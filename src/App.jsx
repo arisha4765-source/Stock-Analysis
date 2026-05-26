@@ -37,6 +37,8 @@ export default function App() {
     useState(null);
 
   const [history, setHistory] =
+    const [news, setNews] =
+  useState([]);
     useState([]);
   const [alertPrice, setAlertPrice] =
   useState("");
@@ -118,6 +120,12 @@ const [alerts, setAlerts] =
             : [];
 
         setHistory(cleanHistory);
+        const newsRes =
+  await axios.get(
+    `https://stock-analysis-81hr.onrender.com/api/news/${formattedSymbol}`
+  );
+
+setNews(newsRes.data);
       }
 
     } catch (err) {
@@ -186,7 +194,89 @@ alerts.forEach((item) => {
       },
     ],
   };
+<div style={{ marginTop: 30 }}>
 
+  <h2>
+    📰 Latest Stock News
+  </h2>
+
+  {news.length > 0 ? (
+
+    news
+      .slice(0, 5)
+      .map(
+        (
+          article,
+          index
+        ) => (
+
+          <div
+            key={index}
+            style={{
+              marginBottom: 20,
+              padding: 15,
+              border:
+                "1px solid #ccc",
+              borderRadius: 10,
+            }}
+          >
+
+            {article.urlToImage && (
+
+              <img
+                src={
+                  article.urlToImage
+                }
+                alt="news"
+                style={{
+                  width: "100%",
+                  maxHeight:
+                    200,
+                  objectFit:
+                    "cover",
+                  borderRadius:
+                    10,
+                }}
+              />
+
+            )}
+
+            <h3>
+              {
+                article.title
+              }
+            </h3>
+
+            <p>
+              {
+                article.source
+                  ?.name
+              }
+            </p>
+
+            <a
+              href={
+                article.url
+              }
+              target="_blank"
+              rel="noreferrer"
+            >
+              Read Article →
+            </a>
+
+          </div>
+        )
+      )
+
+  ) : (
+
+    <p>
+      No news available
+    </p>
+
+  )}
+
+</div>
   return (
     <div
       style={{
