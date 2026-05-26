@@ -1,8 +1,16 @@
 const express = require("express");
 const axios = require("axios");
+const OpenAI =
+  require("openai");
 const cors = require("cors");
 
 const app = express();
+
+const openai =
+  new OpenAI({
+    apiKey:
+      process.env.OPENAI_API_KEY,
+  });
 
 app.use(cors());
 app.use(express.json());
