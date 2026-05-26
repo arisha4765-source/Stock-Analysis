@@ -22,6 +22,22 @@ const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
 const [watchlist, setWatchlist] = useState([]);
 
+  const signUp = async () => {
+  await supabase.auth.signUp({
+    email,
+    password,
+  });
+};
+
+const signIn = async () => {
+  const { data } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  setUser(data.user);
+};
+
   const parseSignal = (text) => {
   if (!text) return "⚪ UNKNOWN";
 
