@@ -72,18 +72,24 @@ app.post("/api/ai", async (req, res) => {
   try {
     const { symbol, price, history, question } = req.body;
 
-    const prompt = `
-You are a stock market expert.
+    const lastPrices = history?.slice(-10) || [];
 
-Stock: ${symbol}
+    const prompt = `
+You are a professional stock market analyst.
+
+Analyze this stock:
+
+Symbol: ${symbol}
 Price: ${price}
-Recent trend: ${history?.slice(-5).join(", ")}
+Recent prices: ${lastPrices.join(", ")}
 User question: ${question}
 
-Give:
-- Buy / Hold / Sell
-- Reason
-- Risk level
+Return ONLY in this format:
+
+Signal: Buy | Hold | Sell
+Confidence: 0-100
+Risk: Low | Medium | High
+Reason: short explanation
 `;
 
     const response = await openai.chat.completions.create({
@@ -91,9 +97,11 @@ Give:
       messages: [{ role: "user", content: prompt }],
     });
 
-    res.json({ answer: response.choices[0].message.content });
+    res.json({
+      analysis: response.choices[0].message.content,
+    });
   } catch (err) {
-    res.status(500).json({ error: "AI error" });
+    res.status(500).json({ error: "AI failed" });
   }
 });
 
