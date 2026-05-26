@@ -60,7 +60,7 @@ app.get("/api/stock/:symbol", async (req, res) => {
       {
         params: {
           symbol,
-          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7,
+          apikey: "aaf7843c99e64f0d8a388c0ad4e736c7",
         },
       }
     );
