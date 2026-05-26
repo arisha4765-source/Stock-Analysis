@@ -70,6 +70,12 @@ export default function App() {
   const [alerts, setAlerts] =
     useState([]);
 
+  const [question, setQuestion] =
+  useState("");
+
+const [aiAnswer, setAiAnswer] =
+  useState("");
+
   // 🔹 RSI FUNCTION
   const calculateRSI = (
     prices
@@ -126,6 +132,41 @@ export default function App() {
     ).toFixed(2);
   };
 
+  const askAI = async () => {
+
+  try {
+
+    const response =
+      await axios.post(
+        "https://stock-analysis-81hr.onrender.com/api/ai",
+        {
+          symbol:
+            data.symbol,
+
+          price:
+            data.price,
+
+          prediction,
+
+          sentiment,
+
+          rsi,
+        }
+      );
+
+    setAiAnswer(
+      response.data.answer
+    );
+
+  } catch (err) {
+
+    console.error(err);
+
+    setAiAnswer(
+      "AI failed."
+    );
+  }
+};
   // 🔹 FETCH STOCK
   const fetchStock = async (
     loadHistory = true
@@ -692,6 +733,72 @@ export default function App() {
               📰 Latest
               Stock News
             </h2>
+
+            <div
+  style={{
+    marginTop: 40,
+    padding: 20,
+    borderRadius: 10,
+    background:
+      darkMode
+        ? "#222"
+        : "#f5f5f5",
+  }}
+>
+
+  <h2>
+    🤖 AI Stock Assistant
+  </h2>
+
+  <input
+    type="text"
+    placeholder="Ask AI about this stock..."
+    value={question}
+    onChange={(e) =>
+      setQuestion(
+        e.target.value
+      )
+    }
+    style={{
+      width: "70%",
+      padding: 10,
+      marginRight: 10,
+    }}
+  />
+
+  <button
+    onClick={askAI}
+  >
+    Ask AI
+  </button>
+
+  {aiAnswer && (
+
+    <div
+      style={{
+        marginTop: 20,
+        padding: 15,
+        borderRadius: 10,
+        background:
+          darkMode
+            ? "#333"
+            : "#fff",
+      }}
+    >
+
+      <h3>
+        AI Response
+      </h3>
+
+      <p>
+        {aiAnswer}
+      </p>
+
+    </div>
+
+  )}
+
+</div>
 
             {news.length >
             0 ? (
