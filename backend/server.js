@@ -64,19 +64,6 @@ app.get("/api/stock/:symbol", async (req, res) => {
   }
 });
 
-// ---------------- STOCK FORMAT ----------------
-const formatSymbol = (symbol) => {
-  symbol = symbol.toUpperCase();
-
-  const india = ["TCS", "INFY", "RELIANCE", "SBIN"];
-
-  if (india.includes(symbol)) {
-    return symbol + ".NSE";
-  }
-
-  return symbol;
-};
-
 // ---------------- STOCK API ----------------
 app.get("/api/stock/:symbol", async (req, res) => {
   try {
