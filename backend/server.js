@@ -7,10 +7,13 @@ import nodemailer from "nodemailer";
 app.get("/", (req, res) => {
   res.send("Backend running");
 });
-
 const app = express();
+
 app.use(cors());
 app.use(express.json());
+app.get("/", (req, res) => {
+  res.send("Backend running ✅");
+});
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
