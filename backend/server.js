@@ -262,6 +262,89 @@ Reason: short explanation
 });
 // ---------------- START ----------------
 const PORT = process.env.PORT || 5000;
+// ---------------- STOCK API ----------------
+app.get("/api/stock/:symbol", async (req, res) => {
+  try {
+    let symbol =
+      req.params.symbol.toUpperCase();
+
+    const indianStocks = [
+      "TCS",
+      "INFY",
+      "RELIANCE",
+      "SBIN",
+      "HDFCBANK",
+      "ICICIBANK",
+    ];
+
+    if (
+      indianStocks.includes(symbol)
+    ) {
+      symbol = `${symbol}.NSE`;
+    }
+
+    const url =
+      `https://api.twelvedata.com/price?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`;
+
+    const response =
+      await axios.get(url);
+
+    res.json(response.data);
+
+  } catch (error) {
+    console.log(error.message);
+
+    res.status(500).json({
+      error: "Stock API failed",
+    });
+  }
+});
+
+// ---------------- HISTORY API ----------------
+app.get("/api/history/:symbol", async (req, res) => {
+  try {
+    let symbol =
+      req.params.symbol.toUpperCase();
+
+    const indianStocks = [
+      "TCS",
+      "INFY",
+      "RELIANCE",
+      "SBIN",
+      "HDFCBANK",
+      "ICICIBANK",
+    ];
+
+    if (
+      indianStocks.includes(symbol)
+    ) {
+      symbol = `${symbol}.NSE`;
+    }
+
+    const url =
+      `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${process.env.TWELVE_DATA_API_KEY}`;
+
+    const response =
+      await axios.get(url);
+
+    const prices =
+      response.data.values
+        ?.map((v) => ({
+          datetime: v.datetime,
+          close: Number(v.close),
+        }))
+        .reverse() || [];
+
+    res.json(prices);
+
+  } catch (err) {
+    console.log(err.message);
+
+    res.status(500).json({
+      error: "History failed",
+    });
+  }
+});
 
 app.listen(PORT, () =>
   console.log("Server running on " + PORT)
