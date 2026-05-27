@@ -155,9 +155,6 @@ Reason: short explanation
   }
 });
 
-// ---------------- START ----------------
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log("Server running on " + PORT));
 // ---------------- HISTORY (CHART) ----------------
 app.get("/api/history/:symbol", async (req, res) => {
   try {
@@ -214,4 +211,9 @@ Reason: short explanation
     res.status(500).json({ error: "AI failed" });
   }
 });
+// ---------------- START ----------------
+const PORT = process.env.PORT || 5000;
 
+app.listen(PORT, () =>
+  console.log("Server running on " + PORT)
+);
