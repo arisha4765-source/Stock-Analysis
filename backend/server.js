@@ -64,11 +64,6 @@ app.get("/api/stock/:symbol", async (req, res) => {
   }
 });
 
-// ---------------- OPENAI ----------------
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 // ---------------- STOCK FORMAT ----------------
 const formatSymbol = (symbol) => {
   symbol = symbol.toUpperCase();
