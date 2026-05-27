@@ -67,6 +67,37 @@ const formatSymbol = (symbol) => {
   return symbol;
 };
 
+app.get("/api/ai/:symbol", async (req, res) => {
+  try {
+    const symbol = req.params.symbol;
+
+    res.json({
+      prediction:
+        `${symbol} currently shows moderate momentum. ` +
+        `This is not financial advice but trend appears bullish.`,
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: "AI failed",
+    });
+  }
+});
+
+app.get("/api/news/:symbol", async (req, res) => {
+  try {
+    const symbol = req.params.symbol;
+
+    const response = await axios.get(
+      `https://newsapi.org/v2/everything?q=${symbol}&apiKey=${process.env.NEWS_API_KEY}`
+    );
+
+    res.json(response.data);
+  } catch (err) {
+    res.status(500).json({
+      error: "News failed",
+    });
+  }
+});
 // ---------------- STOCK API ----------------
 app.get("/api/stock/:symbol", async (req, res) => {
   try {
