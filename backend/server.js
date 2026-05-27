@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import axios from "axios";
 import OpenAI from "openai";
-import cron from "node-cron";
 import nodemailer from "nodemailer";
 
 const app = express();
@@ -104,9 +103,6 @@ app.get("/api/history/:symbol", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: "History error" });
   }
-});
-cron.schedule("*/2 * * * *", async () => {
-  console.log("Checking alerts...");
 });
 // ---------------- AI ASSISTANT ----------------
 app.post("/api/ai", async (req, res) => {
