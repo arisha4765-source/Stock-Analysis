@@ -8,17 +8,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ROOT
 app.get("/", (req, res) => {
   res.send("Backend running ✅");
 });
 
+// OPENAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// FORMAT SYMBOL
 const formatSymbol = (symbol) => {
-  symbol = symbol.toUpperCase();
-
   const indianStocks = [
     "TCS",
     "INFY",
@@ -28,6 +29,8 @@ const formatSymbol = (symbol) => {
     "ICICIBANK",
   ];
 
+  symbol = symbol.toUpperCase();
+
   if (indianStocks.includes(symbol)) {
     return `${symbol}.NSE`;
   }
@@ -35,7 +38,7 @@ const formatSymbol = (symbol) => {
   return symbol;
 };
 
-// STOCK
+// STOCK PRICE
 app.get("/api/stock/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
@@ -46,16 +49,16 @@ app.get("/api/stock/:symbol", async (req, res) => {
 
     res.json(response.data);
 
-  } catch (err) {
-    console.log(err.message);
+  } catch (error) {
+    console.log(error.message);
 
     res.status(500).json({
-      error: "Stock failed",
+      error: "Stock API failed",
     });
   }
 });
 
-// HISTORY
+// CHART HISTORY
 app.get("/api/history/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
@@ -64,16 +67,16 @@ app.get("/api/history/:symbol", async (req, res) => {
       `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${process.env.TWELVE_DATA_API_KEY}`
     );
 
-    const prices =
-      response.data.values?.map((v) => ({
-        datetime: v.datetime,
-        close: Number(v.close),
+    const data =
+      response.data.values?.map((item) => ({
+        datetime: item.datetime,
+        close: Number(item.close),
       })).reverse() || [];
 
-    res.json(prices);
+    res.json(data);
 
-  } catch (err) {
-    console.log(err.message);
+  } catch (error) {
+    console.log(error.message);
 
     res.status(500).json({
       error: "History failed",
@@ -85,13 +88,13 @@ app.get("/api/history/:symbol", async (req, res) => {
 app.get("/api/news/:symbol", async (req, res) => {
   try {
     const response = await axios.get(
-      `https://newsapi.org/v2/everything?q=${req.params.symbol}&apiKey=${process.env.NEWS_API_KEY}`
+      `https://newsapi.org/v2/everything?q=${req.params.symbol}&sortBy=publishedAt&apiKey=${process.env.NEWS_API_KEY}`
     );
 
     res.json(response.data);
 
-  } catch (err) {
-    console.log(err.message);
+  } catch (error) {
+    console.log(error.message);
 
     res.status(500).json({
       error: "News failed",
@@ -99,7 +102,7 @@ app.get("/api/news/:symbol", async (req, res) => {
   }
 });
 
-// AI
+// AI ANALYSIS
 app.post("/api/ai", async (req, res) => {
   try {
     const {
@@ -110,17 +113,22 @@ app.post("/api/ai", async (req, res) => {
     } = req.body;
 
     const prompt = `
-Analyze stock ${symbol}
+You are a stock market expert.
 
-Price: ${price}
+Stock: ${symbol}
+Current Price: ${price}
 
-History:
+Recent Prices:
 ${history?.join(", ")}
 
 Question:
 ${question}
 
-Give short investment advice.
+Give:
+- Trend
+- Risk
+- Buy/Hold/Sell
+- Short reason
 `;
 
     const completion =
@@ -139,8 +147,8 @@ Give short investment advice.
         completion.choices[0].message.content,
     });
 
-  } catch (err) {
-    console.log(err.message);
+  } catch (error) {
+    console.log(error.message);
 
     res.status(500).json({
       error: "AI failed",
@@ -148,6 +156,7 @@ Give short investment advice.
   }
 });
 
+// START
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
