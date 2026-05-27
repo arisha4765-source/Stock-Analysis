@@ -3,7 +3,34 @@ import cors from "cors";
 import axios from "axios";
 import OpenAI from "openai";
 import nodemailer from "nodemailer";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
 
+<LineChart
+  width={700}
+  height={300}
+  data={history}
+>
+  <CartesianGrid strokeDasharray="3 3" />
+
+  <XAxis dataKey="datetime" />
+
+  <YAxis />
+
+  <Tooltip />
+
+  <Line
+    type="monotone"
+    dataKey="close"
+    stroke="#8884d8"
+  />
+</LineChart>
 const app = express();
 app.use(cors());
 app.use(express.json());
