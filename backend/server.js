@@ -78,47 +78,87 @@ app.get("/api/news/:symbol", async (req, res) => {
 // ---------------- STOCK API ----------------
 app.get("/api/stock/:symbol", async (req, res) => {
   try {
-    let symbol = req.params.symbol.toUpperCase();
+    let symbol =
+      req.params.symbol.toUpperCase();
 
     // Indian stocks
+    const indianStocks = [
+      "TCS",
+      "INFY",
+      "RELIANCE",
+      "SBIN",
+      "HDFCBANK",
+      "ICICIBANK",
+    ];
+
     if (
-      !symbol.includes(":") &&
-      !symbol.includes(".")
+      indianStocks.includes(symbol)
     ) {
-      symbol = `${symbol}:NSE`;
+      symbol = `${symbol}.NSE`;
     }
 
-    const response = await axios.get(
-      `https://api.twelvedata.com/price?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
-    );
+    const url =
+      `https://api.twelvedata.com/price?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`;
+
+    const response =
+      await axios.get(url);
 
     res.json(response.data);
+
   } catch (error) {
+    console.log(error.message);
+
     res.status(500).json({
-      error: "API error",
+      error: "Stock API failed",
     });
   }
 });
-
 // ---------------- STOCK API ----------------
 
 
 // ---------------- HISTORY (CHART) ----------------
 app.get("/api/history/:symbol", async (req, res) => {
   try {
-    const symbol = formatSymbol(req.params.symbol);
+    let symbol =
+      req.params.symbol.toUpperCase();
+
+    const indianStocks = [
+      "TCS",
+      "INFY",
+      "RELIANCE",
+      "SBIN",
+      "HDFCBANK",
+      "ICICIBANK",
+    ];
+
+    if (
+      indianStocks.includes(symbol)
+    ) {
+      symbol = `${symbol}.NSE`;
+    }
 
     const url =
       `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${process.env.TWELVE_DATA_API_KEY}`;
 
-    const response = await axios.get(url);
+    const response =
+      await axios.get(url);
 
     const prices =
-      response.data.values?.map((v) => Number(v.close)).reverse() || [];
+      response.data.values
+        ?.map((v) => ({
+          datetime: v.datetime,
+          close: Number(v.close),
+        }))
+        .reverse() || [];
 
-    res.json({ prices });
+    res.json(prices);
+
   } catch (err) {
-    res.status(500).json({ error: "History error" });
+    console.log(err.message);
+
+    res.status(500).json({
+      error: "History failed",
+    });
   }
 });
 // ---------------- AI ASSISTANT ----------------
