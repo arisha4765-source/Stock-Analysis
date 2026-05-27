@@ -4,9 +4,6 @@ import axios from "axios";
 import OpenAI from "openai";
 import nodemailer from "nodemailer";
 
-app.get("/", (req, res) => {
-  res.send("Backend running");
-});
 const app = express();
 
 app.use(cors());
