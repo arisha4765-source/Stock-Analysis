@@ -165,10 +165,15 @@ app.get("/api/history/:symbol", async (req, res) => {
 
     const response = await axios.get(url);
 
-    const prices =
-      response.data.values?.map((v) => Number(v.close)).reverse() || [];
+   const prices =
+  response.data.values
+    ?.map((v) => ({
+      datetime: v.datetime,
+      close: Number(v.close),
+    }))
+    .reverse() || [];
 
-    res.json({ prices });
+res.json(prices);
   } catch (err) {
     res.status(500).json({ error: "History error" });
   }
