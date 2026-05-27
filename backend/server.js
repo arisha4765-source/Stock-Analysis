@@ -43,48 +43,30 @@ const formatSymbol = (symbol) => {
 // ---------------- STOCK API ----------------
 app.get("/api/stock/:symbol", async (req, res) => {
   try {
-    const symbol = formatSymbol(req.params.symbol);
+    let symbol = req.params.symbol.toUpperCase();
 
-    const url =
-      `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`;
-
-    const response = await axios.get(url);
-
-    if (response.data.status === "error") {
-      return res.json({ error: "Stock not found" });
+    // Indian stocks
+    if (
+      !symbol.includes(":") &&
+      !symbol.includes(".")
+    ) {
+      symbol = `${symbol}:NSE`;
     }
 
-    res.json({
-      symbol: response.data.symbol,
-      price: response.data.close,
+    const response = await axios.get(
+      `https://api.twelvedata.com/price?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({
+      error: "API error",
     });
-  } catch (err) {
-    res.status(500).json({ error: "Stock API error" });
   }
 });
 
 // ---------------- STOCK API ----------------
-app.get("/api/stock/:symbol", async (req, res) => {
-  try {
-    const symbol = formatSymbol(req.params.symbol);
 
-    const url =
-      `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`;
-
-    const response = await axios.get(url);
-
-    if (response.data.status === "error") {
-      return res.json({ error: "Stock not found" });
-    }
-
-    res.json({
-      symbol: response.data.symbol,
-      price: response.data.close,
-    });
-  } catch (err) {
-    res.status(500).json({ error: "Stock API error" });
-  }
-});
 
 // ---------------- HISTORY (CHART) ----------------
 app.get("/api/history/:symbol", async (req, res) => {
