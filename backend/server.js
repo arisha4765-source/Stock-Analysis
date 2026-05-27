@@ -12,12 +12,10 @@ app.get("/", (req, res) => {
   res.send("Backend running ✅");
 });
 
-// ---------------- OPENAI ----------------
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// ---------------- STOCK FORMAT ----------------
 const formatSymbol = (symbol) => {
   symbol = symbol.toUpperCase();
 
@@ -37,36 +35,34 @@ const formatSymbol = (symbol) => {
   return symbol;
 };
 
-// ---------------- STOCK PRICE ----------------
+// STOCK
 app.get("/api/stock/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
 
-    const url =
-      `https://api.twelvedata.com/price?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`;
-
-    const response = await axios.get(url);
+    const response = await axios.get(
+      `https://api.twelvedata.com/price?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
+    );
 
     res.json(response.data);
 
-  } catch (error) {
-    console.log(error.message);
+  } catch (err) {
+    console.log(err.message);
 
     res.status(500).json({
-      error: "Stock API failed",
+      error: "Stock failed",
     });
   }
 });
 
-// ---------------- CHART HISTORY ----------------
+// HISTORY
 app.get("/api/history/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
 
-    const url =
-      `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${process.env.TWELVE_DATA_API_KEY}`;
-
-    const response = await axios.get(url);
+    const response = await axios.get(
+      `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${process.env.TWELVE_DATA_API_KEY}`
+    );
 
     const prices =
       response.data.values?.map((v) => ({
@@ -85,15 +81,12 @@ app.get("/api/history/:symbol", async (req, res) => {
   }
 });
 
-// ---------------- NEWS ----------------
+// NEWS
 app.get("/api/news/:symbol", async (req, res) => {
   try {
-    const symbol = req.params.symbol;
-
-    const url =
-      `https://newsapi.org/v2/everything?q=${symbol}&sortBy=publishedAt&apiKey=${process.env.NEWS_API_KEY}`;
-
-    const response = await axios.get(url);
+    const response = await axios.get(
+      `https://newsapi.org/v2/everything?q=${req.params.symbol}&apiKey=${process.env.NEWS_API_KEY}`
+    );
 
     res.json(response.data);
 
@@ -106,7 +99,7 @@ app.get("/api/news/:symbol", async (req, res) => {
   }
 });
 
-// ---------------- AI ----------------
+// AI
 app.post("/api/ai", async (req, res) => {
   try {
     const {
@@ -117,19 +110,17 @@ app.post("/api/ai", async (req, res) => {
     } = req.body;
 
     const prompt = `
-You are a stock market AI analyst.
+Analyze stock ${symbol}
 
-Stock: ${symbol}
-Current price: ${price}
-Recent prices: ${history?.join(", ")}
+Price: ${price}
+
+History:
+${history?.join(", ")}
 
 Question:
 ${question}
 
-Give:
-- Buy/Hold/Sell
-- Confidence %
-- Short reason
+Give short investment advice.
 `;
 
     const completion =
@@ -157,7 +148,6 @@ Give:
   }
 });
 
-// ---------------- START SERVER ----------------
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
