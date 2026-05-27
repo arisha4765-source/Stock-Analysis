@@ -131,7 +131,7 @@ export default function App() {
         aiRes.data.prediction
       );
     } catch (err) {
-      console.log(err);
+     console.log(err.response?.data || err.message);
 
       alert(
         "Failed to load stock data"
