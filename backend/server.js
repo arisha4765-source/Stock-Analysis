@@ -1,7 +1,8 @@
 import express from "express";
 import cors from "cors";
-import axios from "axios";
 import OpenAI from "openai";
+import yahooFinance from "yahoo-finance2";
+import axios from "axios";
 
 const app = express();
 
@@ -10,22 +11,12 @@ app.use(express.json());
 
 // ---------------- ROOT ----------------
 app.get("/", (req, res) => {
-  res.send("Backend running ✅");
+  res.send("Yahoo Finance Backend Running ✅");
 });
 
-// ---------------- TEST ----------------
-app.get("/test", (req, res) => {
-  res.send("TEST ROUTE WORKING");
-});
-
-// ---------------- OPENAI ----------------
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// ---------------- SYMBOL FORMAT ----------------
+// ---------------- FORMAT SYMBOL ----------------
 const formatSymbol = (symbol) => {
-  symbol = symbol.toUpperCase();
+  symbol = symbol.toUpperCase().trim();
 
   const indianStocks = [
     "TCS",
@@ -37,14 +28,13 @@ const formatSymbol = (symbol) => {
     "WIPRO",
     "LT",
     "AXISBANK",
-    "KOTAKBANK",
   ];
 
   if (
     indianStocks.includes(symbol) &&
-    !symbol.includes(".NSE")
+    !symbol.endsWith(".NS")
   ) {
-    return `${symbol}.NSE`;
+    return `${symbol}.NS`;
   }
 
   return symbol;
@@ -55,43 +45,52 @@ app.get("/api/stock/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
 
-    const response = await axios.get(
-      `https://api.twelvedata.com/price?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
-    );
+    const result =
+      await yahooFinance.quote(symbol);
 
-    res.json(response.data);
+    res.json({
+      symbol: result.symbol,
+      name: result.shortName,
+      price: result.regularMarketPrice,
+      change: result.regularMarketChangePercent,
+      currency: result.currency,
+      market: result.exchange,
+    });
 
-  } catch (error) {
-    console.log(error.message);
+  } catch (err) {
+    console.log(err);
 
     res.status(500).json({
-      error: "Stock API failed",
+      error: "Stock fetch failed",
     });
   }
 });
 
-// ---------------- HISTORY ----------------
+// ---------------- CHART HISTORY ----------------
 app.get("/api/history/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
 
-    const response = await axios.get(
-      `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${process.env.TWELVE_DATA_API_KEY}`
-    );
+    const result =
+      await yahooFinance.chart(symbol, {
+        period1: "2024-01-01",
+        interval: "1d",
+      });
 
-    const history =
-      response.data.values?.map((item) => ({
-        datetime: item.datetime,
-        close: Number(item.close),
-      })).reverse() || [];
+    const prices =
+      result.quotes.map((item) => ({
+        datetime:
+          item.date?.toISOString().split("T")[0],
+        close: item.close,
+      }));
 
-    res.json(history);
+    res.json(prices);
 
-  } catch (error) {
-    console.log(error.message);
+  } catch (err) {
+    console.log(err);
 
     res.status(500).json({
-      error: "History API failed",
+      error: "History failed",
     });
   }
 });
@@ -105,13 +104,18 @@ app.get("/api/news/:symbol", async (req, res) => {
 
     res.json(response.data);
 
-  } catch (error) {
-    console.log(error.message);
+  } catch (err) {
+    console.log(err);
 
     res.status(500).json({
-      error: "News API failed",
+      error: "News failed",
     });
   }
+});
+
+// ---------------- OPENAI ----------------
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 // ---------------- AI ----------------
@@ -121,13 +125,12 @@ app.post("/api/ai", async (req, res) => {
       symbol,
       price,
       history,
-      question,
     } = req.body;
 
     const prompt = `
-You are a professional stock analyst.
+Analyze this stock.
 
-Stock Symbol:
+Stock:
 ${symbol}
 
 Current Price:
@@ -136,14 +139,11 @@ ${price}
 Recent Prices:
 ${history?.join(", ")}
 
-User Question:
-${question}
-
 Give:
-1. Trend
-2. Buy/Hold/Sell
-3. Risk level
-4. Short reason
+- Trend
+- Buy/Hold/Sell
+- Risk
+- Short reason
 `;
 
     const completion =
@@ -162,8 +162,8 @@ Give:
         completion.choices[0].message.content,
     });
 
-  } catch (error) {
-    console.log(error.message);
+  } catch (err) {
+    console.log(err);
 
     res.status(500).json({
       error: "AI failed",
@@ -175,5 +175,7 @@ Give:
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+  console.log(
+    `Server running on ${PORT}`
+  );
 });
