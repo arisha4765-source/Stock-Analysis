@@ -83,7 +83,7 @@ export default function App() {
       alert(error.message);
     } else {
       alert(
-        "Magic login link sent to your email"
+        "Login link sent to your email"
       );
     }
   };
@@ -157,7 +157,7 @@ export default function App() {
     );
 
     const method = prompt(
-      "email / whatsapp / inapp"
+      "email / whatsapp"
     );
 
     if (
