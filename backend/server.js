@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
+import axios from "axios";
 import OpenAI from "openai";
 import yahooFinance from "yahoo-finance2";
-import axios from "axios";
 
 const app = express();
 
@@ -11,10 +11,10 @@ app.use(express.json());
 
 // ---------------- ROOT ----------------
 app.get("/", (req, res) => {
-  res.send("Yahoo Finance Backend Running ✅");
+  res.send("Hybrid Stock Backend Running ✅");
 });
 
-// ---------------- FORMAT SYMBOL ----------------
+// ---------------- SYMBOL FORMAT ----------------
 const formatSymbol = (symbol) => {
   symbol = symbol.toUpperCase().trim();
 
@@ -28,8 +28,10 @@ const formatSymbol = (symbol) => {
     "WIPRO",
     "LT",
     "AXISBANK",
+    "KOTAKBANK",
   ];
 
+  // Yahoo format
   if (
     indianStocks.includes(symbol) &&
     !symbol.endsWith(".NS")
@@ -45,16 +47,40 @@ app.get("/api/stock/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
 
-    const result =
-      await yahooFinance.quote(symbol);
+    // TRY YAHOO FIRST
+    try {
+      const yahoo =
+        await yahooFinance.quote(symbol);
 
-    res.json({
-      symbol: result.symbol,
-      name: result.shortName,
-      price: result.regularMarketPrice,
-      change: result.regularMarketChangePercent,
-      currency: result.currency,
-      market: result.exchange,
+      return res.json({
+        provider: "Yahoo Finance",
+        symbol: yahoo.symbol,
+        name: yahoo.shortName,
+        price: yahoo.regularMarketPrice,
+        change:
+          yahoo.regularMarketChangePercent,
+        currency: yahoo.currency,
+        exchange: yahoo.exchange,
+      });
+
+    } catch (yahooErr) {
+      console.log(
+        "Yahoo failed, using TwelveData"
+      );
+    }
+
+    // FALLBACK TO TWELVE DATA
+    const twelveSymbol =
+      symbol.replace(".NS", ".NSE");
+
+    const response = await axios.get(
+      `https://api.twelvedata.com/price?symbol=${twelveSymbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
+    );
+
+    return res.json({
+      provider: "Twelve Data",
+      symbol: twelveSymbol,
+      price: response.data.price,
     });
 
   } catch (err) {
@@ -66,23 +92,49 @@ app.get("/api/stock/:symbol", async (req, res) => {
   }
 });
 
-// ---------------- CHART HISTORY ----------------
+// ---------------- HISTORY ----------------
 app.get("/api/history/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
 
-    const result =
-      await yahooFinance.chart(symbol, {
-        period1: "2024-01-01",
-        interval: "1d",
-      });
+    // TRY YAHOO FIRST
+    try {
+      const result =
+        await yahooFinance.chart(symbol, {
+          period1: "2024-01-01",
+          interval: "1d",
+        });
+
+      const prices =
+        result.quotes.map((item) => ({
+          datetime:
+            item.date
+              ?.toISOString()
+              .split("T")[0],
+          close: item.close,
+        }));
+
+      return res.json(prices);
+
+    } catch (yahooErr) {
+      console.log(
+        "Yahoo history failed, using TwelveData"
+      );
+    }
+
+    // FALLBACK TO TWELVE DATA
+    const twelveSymbol =
+      symbol.replace(".NS", ".NSE");
+
+    const response = await axios.get(
+      `https://api.twelvedata.com/time_series?symbol=${twelveSymbol}&interval=1day&outputsize=30&apikey=${process.env.TWELVE_DATA_API_KEY}`
+    );
 
     const prices =
-      result.quotes.map((item) => ({
-        datetime:
-          item.date?.toISOString().split("T")[0],
-        close: item.close,
-      }));
+      response.data.values?.map((v) => ({
+        datetime: v.datetime,
+        close: Number(v.close),
+      })).reverse() || [];
 
     res.json(prices);
 
@@ -128,21 +180,21 @@ app.post("/api/ai", async (req, res) => {
     } = req.body;
 
     const prompt = `
-Analyze this stock.
+You are an expert stock analyst.
 
-Stock:
-${symbol}
+Analyze this stock:
 
-Current Price:
-${price}
+Stock: ${symbol}
+Current Price: ${price}
 
 Recent Prices:
 ${history?.join(", ")}
 
-Give:
+Return:
 - Trend
 - Buy/Hold/Sell
 - Risk
+- Confidence %
 - Short reason
 `;
 
