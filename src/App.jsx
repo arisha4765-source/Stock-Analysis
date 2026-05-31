@@ -133,16 +133,20 @@ export default function App() {
 
     setAiResult(aiRes.data.analysis);
 
-  } catch (err) {
-    console.log(
-      err.response?.data || err.message
-    );
+  catch (err) {
+  console.log("FULL ERROR", err);
 
-    alert("Failed to load stock data");
-  } finally {
-    setLoading(false);
-  }
-};
+  console.log(
+    "SERVER RESPONSE",
+    err.response?.data
+  );
+
+  alert(
+    JSON.stringify(
+      err.response?.data || err.message
+    )
+  );
+}
 
   // ---------------- CREATE ALERT ----------------
   const createAlert = async () => {
