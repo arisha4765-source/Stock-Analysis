@@ -106,12 +106,20 @@ export default function App() {
       setStockData(stockRes.data);
 
       // HISTORY
-      const historyRes =
-        await axios.get(
-          `${BACKEND}/api/history/${symbol}`
-        );
+      const historyData = historyRes.data;
 
-      setHistory(historyRes.data);
+setHistory(historyData);
+
+const aiRes = await axios.post(
+  `${BACKEND}/api/ai`,
+  {
+    symbol,
+    price:
+      stockRes.data.price ||
+      stockRes.data.regularMarketPrice,
+    history: historyData
+  }
+);
 
       // NEWS
       const newsRes = await axios.get(
@@ -123,9 +131,18 @@ export default function App() {
       );
 
       // AI
-      const aiRes = await axios.get(
-        `${BACKEND}/api/ai/${symbol}`
-      );
+     const aiRes = await axios.post(
+  `${BACKEND}/api/ai`,
+  {
+    symbol,
+    price:
+      stockRes.data.price ||
+      stockRes.data.regularMarketPrice,
+    history
+  }
+);
+
+setAiResult(aiRes.data.analysis);
 
       setAiResult(
         aiRes.data.prediction
