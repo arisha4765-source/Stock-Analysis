@@ -209,13 +209,13 @@ Reason:
         completion.choices[0].message.content,
     });
   } catch (err) {
-    console.error(err);
+  console.error("AI ERROR:", err);
 
-    res.status(500).json({
-      error: "AI failed",
-    });
-  }
-});
+  res.status(500).json({
+    error: err.message,
+    details: err.response?.data || null
+  });
+}
 
 // ---------------- START ----------------
 const PORT = process.env.PORT || 5000;
