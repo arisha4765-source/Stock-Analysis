@@ -98,7 +98,6 @@ app.get("/api/stock/:symbol", async (req, res) => {
   }
 });
 // ---------------- HISTORY ----------------
-// ---------------- HISTORY ----------------
 app.get("/api/history/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
@@ -194,15 +193,20 @@ Reason:
 `;
 
     const completion =
-      await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-      });
+  await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a professional stock analyst."
+      },
+      {
+        role: "user",
+        content: prompt
+      }
+    ]
+  });
 
     res.json({
       analysis:
