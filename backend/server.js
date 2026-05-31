@@ -100,30 +100,30 @@ app.get("/api/stock/:symbol", async (req, res) => {
 // ---------------- HISTORY ----------------
 app.get("/api/history/:symbol", async (req, res) => {
   try {
-    let symbol = req.params.symbol;
+    const symbol = formatSymbol(req.params.symbol);
 
-    if (
-      ["TCS","INFY","RELIANCE","SBIN"]
-      .includes(symbol.toUpperCase())
-    ) {
-      symbol += ".NSE";
-    }
-
-    const response = await axios.get(
-      `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${process.env.TWELVE_DATA_API_KEY}`
+    const result = await yahooFinance.chart(
+      symbol,
+      {
+        range: "1y",
+        interval: "1d",
+      }
     );
 
     const history =
-      response.data.values?.map((item) => ({
-        datetime: item.datetime,
-        close: Number(item.close)
-      })).reverse() || [];
+      result.quotes?.map((item) => ({
+        datetime: item.date?.toISOString().split("T")[0],
+        close: item.close,
+      })) || [];
 
     res.json(history);
 
   } catch (err) {
+    console.error("HISTORY ERROR:", err);
+
     res.status(500).json({
-      error: err.message
+      error: err.message,
+      stack: err.stack,
     });
   }
 });
