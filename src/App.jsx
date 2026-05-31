@@ -100,7 +100,7 @@ export default function App() {
 
     // STOCK
     const stockRes = await axios.get(
-      `${BACKEND}/api/yahoo/${symbol}`
+      `${BACKEND}/api/stock/${symbol}`
     );
 
     setStockData(stockRes.data);
