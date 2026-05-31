@@ -8,6 +8,20 @@ const yahooFinance = new YahooFinance();
 
 const app = express();
 
+app.get("/test-stock", async (req, res) => {
+  try {
+    const result =
+      await yahooFinance.quote("TCS.NS");
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+      stack: err.stack
+    });
+  }
+});
+
 app.get("/debug", (req, res) => {
   res.json({
     yahooFinance
