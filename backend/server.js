@@ -86,10 +86,15 @@ app.get("/api/stock/:symbol", async (req, res) => {
     });
 
   } catch (err) {
-    res.status(500).json({
-      error: "Stock fetch failed"
-    });
-  }
+  console.log(
+    "BACKEND ERROR:",
+    err.response?.data
+  );
+
+  console.log(err);
+
+  alert("Failed to load stock data");
+}
 });
 // ---------------- HISTORY ----------------
 app.get("/api/history/:symbol", async (req, res) => {
