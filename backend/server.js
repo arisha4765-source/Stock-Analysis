@@ -100,33 +100,30 @@ app.get("/api/stock/:symbol", async (req, res) => {
 // ---------------- HISTORY ----------------
 app.get("/api/history/:symbol", async (req, res) => {
   try {
-    const symbol = formatSymbol(req.params.symbol);
+    let symbol = req.params.symbol;
 
-    const result = await yahooFinance.chart(
-      symbol,
-      {
-        period1: "2024-01-01",
-        interval: "1d",
-      }
+    if (
+      ["TCS","INFY","RELIANCE","SBIN"]
+      .includes(symbol.toUpperCase())
+    ) {
+      symbol += ".NSE";
+    }
+
+    const response = await axios.get(
+      `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${process.env.TWELVE_DATA_API_KEY}`
     );
 
     const history =
-      result.quotes?.map((item) => ({
-        datetime:
-          item.date?.toISOString().split("T")[0],
-        open: item.open,
-        high: item.high,
-        low: item.low,
-        close: item.close,
-        volume: item.volume,
-      })) || [];
+      response.data.values?.map((item) => ({
+        datetime: item.datetime,
+        close: Number(item.close)
+      })).reverse() || [];
 
     res.json(history);
-  } catch (err) {
-    console.error(err);
 
+  } catch (err) {
     res.status(500).json({
-      error: "History fetch failed",
+      error: err.message
     });
   }
 });
