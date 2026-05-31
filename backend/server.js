@@ -14,6 +14,14 @@ app.get("/debug", (req, res) => {
   });
 });
 
+app.get("/methods", (req, res) => {
+  res.json(
+    Object.getOwnPropertyNames(
+      Object.getPrototypeOf(yahooFinance)
+    )
+  );
+});
+
 app.use(cors());
 app.use(express.json());
 
