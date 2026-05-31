@@ -76,24 +76,18 @@ app.get("/api/stock/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
 
-    console.log("REQUESTED SYMBOL:", symbol);
-
-    const result = await yahooFinance.quote(symbol);
+    const response = await axios.get(
+      `https://api.twelvedata.com/price?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
+    );
 
     res.json({
-      symbol: result.symbol,
-      name: result.shortName,
-      price: result.regularMarketPrice,
-      change: result.regularMarketChange,
-      changePercent: result.regularMarketChangePercent
+      symbol,
+      price: response.data.price
     });
 
   } catch (err) {
-    console.error("YAHOO ERROR:", err);
-
     res.status(500).json({
-      error: err.message,
-      stack: err.stack
+      error: "Stock fetch failed"
     });
   }
 });
@@ -102,39 +96,24 @@ app.get("/api/history/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
 
-    const result = await yahooFinance.chart(symbol, {
-      period1: "2024-01-01",
-      interval: "1d",
-    });
+    const response = await axios.get(
+      `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=100&apikey=${process.env.TWELVE_DATA_API_KEY}`
+    );
 
-    console.log("HISTORY RESULT:", result);
+    const history =
+      response.data.values?.map(item => ({
+        datetime: item.datetime,
+        close: Number(item.close)
+      })) || [];
 
-    const quotes = result.quotes || [];
+    res.json(history.reverse());
 
-    const history = quotes.map((item) => ({
-      datetime: item.date
-        ? new Date(item.date)
-            .toISOString()
-            .split("T")[0]
-        : "",
-      open: item.open || 0,
-      high: item.high || 0,
-      low: item.low || 0,
-      close: item.close || 0,
-      volume: item.volume || 0,
-    }));
-
-    res.json(history);
   } catch (err) {
-    console.error("HISTORY ERROR:", err);
-
     res.status(500).json({
-      error: err.message,
-      stack: err.stack,
+      error: "History fetch failed"
     });
   }
 });
-
 // ---------------- NEWS ----------------
 app.get("/api/news/:symbol", async (req, res) => {
   try {
