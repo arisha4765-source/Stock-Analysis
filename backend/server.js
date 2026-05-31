@@ -98,26 +98,34 @@ app.get("/api/stock/:symbol", async (req, res) => {
   }
 });
 // ---------------- HISTORY ----------------
+// ---------------- HISTORY ----------------
 app.get("/api/history/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
 
-    const result = await yahooFinance.chart(
-      symbol,
-      {
-        range: "1y",
-        interval: "1d",
-      }
-    );
+    const result = await yahooFinance.chart(symbol, {
+      period1: "2024-01-01",
+      interval: "1d",
+    });
 
-    const history =
-      result.quotes?.map((item) => ({
-        datetime: item.date?.toISOString().split("T")[0],
-        close: item.close,
-      })) || [];
+    console.log("HISTORY RESULT:", result);
+
+    const quotes = result.quotes || [];
+
+    const history = quotes.map((item) => ({
+      datetime: item.date
+        ? new Date(item.date)
+            .toISOString()
+            .split("T")[0]
+        : "",
+      open: item.open || 0,
+      high: item.high || 0,
+      low: item.low || 0,
+      close: item.close || 0,
+      volume: item.volume || 0,
+    }));
 
     res.json(history);
-
   } catch (err) {
     console.error("HISTORY ERROR:", err);
 
