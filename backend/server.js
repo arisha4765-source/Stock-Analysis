@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import axios from "axios";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import YahooFinance from "yahoo-finance2";
 
 const yahooFinance = new YahooFinance();
@@ -153,34 +153,26 @@ app.get("/api/news/:symbol", async (req, res) => {
 });
 
 // ---------------- OPENAI ----------------
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
+const genAI = new GoogleGenerativeAI(
+  process.env.GEMINI_API_KEY
+);
 
 // ---------------- AI ----------------
 app.post("/api/ai", async (req, res) => {
   try {
-    const {
-      symbol,
-      price,
-      history = [],
-    } = req.body;
+    const { symbol, price, history = [] } =
+      req.body;
 
     const closes = history
-  .slice(-30)
-  .map((item) =>
-    typeof item === "object"
-      ? item.close
-      : item
-  );
+      .slice(-30)
+      .map((item) => item.close);
 
     const prompt = `
-You are a professional stock analyst.
-
 Stock: ${symbol}
 Current Price: ${price}
 
-Recent Closing Prices:
+Recent Prices:
 ${closes.join(", ")}
 
 Provide:
@@ -192,34 +184,27 @@ Risk:
 Reason:
 `;
 
-    const completion =
-  await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are a professional stock analyst."
-      },
-      {
-        role: "user",
-        content: prompt
-      }
-    ]
-  });
+    const model =
+      genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+      });
+
+    const result =
+      await model.generateContent(prompt);
+
+    const text =
+      result.response.text();
 
     res.json({
-      analysis:
-        completion.choices[0].message.content,
+      analysis: text,
     });
   } catch (err) {
-  console.error("AI ERROR:", err);
+    console.error(err);
 
-  res.status(500).json({
-    error: err.message,
-    details: err.response?.data || null
-  });
-}
+    res.status(500).json({
+      error: "AI failed",
+    });
+  }
 });
 
 // ---------------- START ----------------
