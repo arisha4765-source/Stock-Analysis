@@ -167,12 +167,12 @@ app.post("/api/ai", async (req, res) => {
     } = req.body;
 
     const closes = history
-      .slice(-30)
-      .map((item) =>
-        typeof item === "object"
-          ? item.close
-          : item
-      );
+  .slice(-30)
+  .map((item) =>
+    typeof item === "object"
+      ? item.close
+      : item
+  );
 
     const prompt = `
 You are a professional stock analyst.
@@ -220,6 +220,7 @@ Reason:
     details: err.response?.data || null
   });
 }
+});
 
 // ---------------- START ----------------
 const PORT = process.env.PORT || 5000;
