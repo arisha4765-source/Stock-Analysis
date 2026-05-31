@@ -46,6 +46,8 @@ app.get("/api/stock/:symbol", async (req, res) => {
   try {
     const symbol = formatSymbol(req.params.symbol);
 
+    console.log("REQUESTED SYMBOL:", symbol);
+
     const result = await yahooFinance.quote(symbol);
 
     res.json({
@@ -53,18 +55,18 @@ app.get("/api/stock/:symbol", async (req, res) => {
       name: result.shortName,
       price: result.regularMarketPrice,
       change: result.regularMarketChange,
-      changePercent:
-        result.regularMarketChangePercent,
+      changePercent: result.regularMarketChangePercent
     });
+
   } catch (err) {
-    console.error(err);
+    console.error("YAHOO ERROR:", err);
 
     res.status(500).json({
-      error: "Stock fetch failed",
+      error: err.message,
+      stack: err.stack
     });
   }
 });
-
 // ---------------- HISTORY ----------------
 app.get("/api/history/:symbol", async (req, res) => {
   try {
