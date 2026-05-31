@@ -43,106 +43,104 @@ const formatSymbol = (symbol) => {
 };
 
 // ---------------- STOCK PRICE ----------------
-app.get("/api/stock/:symbol", async (req, res) => {
+app.get("/api/yahoo/:symbol", async (req, res) => {
   try {
-    const symbol = formatSymbol(req.params.symbol);
+    const result = await yahooFinance.quote(req.params.symbol);
 
-    // TRY YAHOO FIRST
-    try {
-      const yahoo =
-        await yahooFinance.quote(symbol);
+    res.json({
+      provider: "Yahoo",
+      symbol: result.symbol,
+      price: result.regularMarketPrice,
+      name: result.shortName
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Yahoo failed" });
+  }
+});
 
-      return res.json({
-        provider: "Yahoo Finance",
-        symbol: yahoo.symbol,
-        name: yahoo.shortName,
-        price: yahoo.regularMarketPrice,
-        change:
-          yahoo.regularMarketChangePercent,
-        currency: yahoo.currency,
-        exchange: yahoo.exchange,
-      });
-
-    } catch (yahooErr) {
-      console.log(
-        "Yahoo failed, using TwelveData"
-      );
-    }
-
-    // FALLBACK TO TWELVE DATA
-    const twelveSymbol =
-      symbol.replace(".NS", ".NSE");
-
-    const response = await axios.get(
-      `https://api.twelvedata.com/price?symbol=${twelveSymbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
+app.get("/api/yahoo-history/:symbol", async (req, res) => {
+  try {
+    const result = await yahooFinance.chart(
+      req.params.symbol,
+      {
+        period1: "2025-01-01",
+        interval: "1d"
+      }
     );
 
-    return res.json({
-      provider: "Twelve Data",
-      symbol: twelveSymbol,
-      price: response.data.price,
-    });
-
+    res.json(result.quotes);
   } catch (err) {
-    console.log(err);
+    res.status(500).json({ error: "Yahoo chart failed" });
+  }
+});
 
-    res.status(500).json({
-      error: "Stock fetch failed",
+app.get("/api/twelve/:symbol", async (req, res) => {
+  try {
+    const response = await axios.get(
+      `https://api.twelvedata.com/price?symbol=${req.params.symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
+    );
+
+    res.json({
+      provider: "TwelveData",
+      ...response.data
     });
+  } catch (err) {
+    res.status(500).json({ error: "TwelveData failed" });
   }
 });
 
 // ---------------- HISTORY ----------------
 app.get("/api/history/:symbol", async (req, res) => {
   try {
-    const symbol = formatSymbol(req.params.symbol);
+    let symbol = req.params.symbol.toUpperCase();
 
-    // TRY YAHOO FIRST
-    try {
-      const result =
-        await yahooFinance.chart(symbol, {
-          period1: "2024-01-01",
-          interval: "1d",
-        });
+    const indianStocks = [
+      "TCS",
+      "INFY",
+      "RELIANCE",
+      "SBIN",
+      "HDFCBANK",
+      "ICICIBANK",
+      "WIPRO",
+      "LT",
+      "AXISBANK"
+    ];
 
-      const prices =
-        result.quotes.map((item) => ({
-          datetime:
-            item.date
-              ?.toISOString()
-              .split("T")[0],
-          close: item.close,
-        }));
-
-      return res.json(prices);
-
-    } catch (yahooErr) {
-      console.log(
-        "Yahoo history failed, using TwelveData"
-      );
+    if (
+      indianStocks.includes(symbol) &&
+      !symbol.endsWith(".NS")
+    ) {
+      symbol = `${symbol}.NS`;
     }
 
-    // FALLBACK TO TWELVE DATA
-    const twelveSymbol =
-      symbol.replace(".NS", ".NSE");
-
-    const response = await axios.get(
-      `https://api.twelvedata.com/time_series?symbol=${twelveSymbol}&interval=1day&outputsize=30&apikey=${process.env.TWELVE_DATA_API_KEY}`
+    const result = await yahooFinance.chart(
+      symbol,
+      {
+        period1: "2023-01-01",
+        interval: "1d"
+      }
     );
 
-    const prices =
-      response.data.values?.map((v) => ({
-        datetime: v.datetime,
-        close: Number(v.close),
-      })).reverse() || [];
+    const history =
+      result.quotes?.map((item) => ({
+        datetime:
+          item.date
+            ?.toISOString()
+            .split("T")[0],
+        open: item.open,
+        high: item.high,
+        low: item.low,
+        close: item.close,
+        volume: item.volume
+      })) || [];
 
-    res.json(prices);
+    res.json(history);
 
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
 
     res.status(500).json({
-      error: "History failed",
+      error: "History fetch failed"
     });
   }
 });
