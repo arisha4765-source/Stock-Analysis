@@ -175,53 +175,19 @@ app.post("/api/ai", async (req, res) => {
     console.log("AI REQUEST:", req.body);
 
     // existing OpenAI code hereapp.post("/api/ai", async (req, res) => {
+ app.post("/api/ai", async (req, res) => {
   try {
-    const {
-      symbol,
-      price,
-      history,
-    } = req.body;
-
-    const prompt = `
-You are an expert stock analyst.
-
-Analyze this stock:
-
-Stock: ${symbol}
-Current Price: ${price}
-
-Recent Prices:
-${history?.join(", ")}
-
-Return:
-- Trend
-- Buy/Hold/Sell
-- Risk
-- Confidence %
-- Short reason
-`;
-
-    const completion =
-      await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-      });
-
-    res.json({
-      analysis:
-        completion.choices[0].message.content,
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini"
     });
 
+    res.json(response);
+
   } catch (err) {
-    console.log(err);
+    console.error(err);
 
     res.status(500).json({
-      error: "AI failed",
+      error: "AI failed"
     });
   }
 });
