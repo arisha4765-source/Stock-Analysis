@@ -95,68 +95,54 @@ export default function App() {
 
   // ---------------- FETCH STOCK ----------------
   const fetchStock = async () => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      // STOCK PRICE
-      const stockRes = await axios.get(
-        `${BACKEND}/api/stock/${symbol}`
-      );
+    // STOCK
+    const stockRes = await axios.get(
+      `${BACKEND}/api/yahoo/${symbol}`
+    );
 
-      setStockData(stockRes.data);
+    setStockData(stockRes.data);
 
-      // HISTORY
-      const historyData = historyRes.data;
+    // HISTORY
+    const historyRes = await axios.get(
+      `${BACKEND}/api/history/${symbol}`
+    );
 
-setHistory(historyData);
+    const historyData = historyRes.data || [];
 
-const aiRes = await axios.post(
-  `${BACKEND}/api/ai`,
-  {
-    symbol,
-    price:
-      stockRes.data.price ||
-      stockRes.data.regularMarketPrice,
-    history: historyData
+    setHistory(historyData);
+
+    // NEWS
+    const newsRes = await axios.get(
+      `${BACKEND}/api/news/${symbol}`
+    );
+
+    setNews(newsRes.data.articles || []);
+
+    // AI
+    const aiRes = await axios.post(
+      `${BACKEND}/api/ai`,
+      {
+        symbol,
+        price: stockRes.data.price,
+        history: historyData,
+      }
+    );
+
+    setAiResult(aiRes.data.analysis);
+
+  } catch (err) {
+    console.log(
+      err.response?.data || err.message
+    );
+
+    alert("Failed to load stock data");
+  } finally {
+    setLoading(false);
   }
-);
-
-      // NEWS
-      const newsRes = await axios.get(
-        `${BACKEND}/api/news/${symbol}`
-      );
-
-      setNews(
-        newsRes.data.articles || []
-      );
-
-      // AI
-     const aiRes = await axios.post(
-  `${BACKEND}/api/ai`,
-  {
-    symbol,
-    price:
-      stockRes.data.price ||
-      stockRes.data.regularMarketPrice,
-    history
-  }
-);
-
-setAiResult(aiRes.data.analysis);
-
-      setAiResult(
-        aiRes.data.prediction
-      );
-    } catch (err) {
-     console.log(err.response?.data || err.message);
-
-      alert(
-        "Failed to load stock data"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+};
 
   // ---------------- CREATE ALERT ----------------
   const createAlert = async () => {
@@ -303,9 +289,7 @@ setAiResult(aiRes.data.analysis);
 
           <h1>
             ₹
-            {stockData.price ||
-              stockData.close ||
-              "N/A"}
+            {stockData.price || stockData.regularMarketPrice || "N/A"}
           </h1>
         </div>
       )}
