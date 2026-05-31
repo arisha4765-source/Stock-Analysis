@@ -8,6 +8,12 @@ const yahooFinance = new YahooFinance();
 
 const app = express();
 
+app.get("/debug", (req, res) => {
+  res.json({
+    yahooFinance
+  });
+});
+
 app.use(cors());
 app.use(express.json());
 
