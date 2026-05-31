@@ -94,18 +94,16 @@ export default function App() {
   };
 
   // ---------------- FETCH STOCK ----------------
-  const fetchStock = async () => {
+const fetchStock = async () => {
   try {
     setLoading(true);
 
-    // STOCK
     const stockRes = await axios.get(
       `${BACKEND}/api/stock/${symbol}`
     );
 
     setStockData(stockRes.data);
 
-    // HISTORY
     const historyRes = await axios.get(
       `${BACKEND}/api/history/${symbol}`
     );
@@ -114,14 +112,12 @@ export default function App() {
 
     setHistory(historyData);
 
-    // NEWS
     const newsRes = await axios.get(
       `${BACKEND}/api/news/${symbol}`
     );
 
     setNews(newsRes.data.articles || []);
 
-    // AI
     const aiRes = await axios.post(
       `${BACKEND}/api/ai`,
       {
@@ -133,20 +129,23 @@ export default function App() {
 
     setAiResult(aiRes.data.analysis);
 
-  catch (err) {
-  console.log("FULL ERROR", err);
+  } catch (err) {
+    console.log("FULL ERROR", err);
 
-  console.log(
-    "SERVER RESPONSE",
-    err.response?.data
-  );
+    console.log(
+      "SERVER RESPONSE",
+      err.response?.data
+    );
 
-  alert(
-    JSON.stringify(
-      err.response?.data || err.message
-    )
-  );
-}
+    alert(
+      JSON.stringify(
+        err.response?.data || err.message
+      )
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ---------------- CREATE ALERT ----------------
   const createAlert = async () => {
