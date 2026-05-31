@@ -169,7 +169,12 @@ const openai = new OpenAI({
 });
 
 // ---------------- AI ----------------
+
 app.post("/api/ai", async (req, res) => {
+  try {
+    console.log("AI REQUEST:", req.body);
+
+    // existing OpenAI code hereapp.post("/api/ai", async (req, res) => {
   try {
     const {
       symbol,
@@ -217,6 +222,16 @@ Return:
 
     res.status(500).json({
       error: "AI failed",
+    });
+  }
+});
+    
+
+  } catch (err) {
+    console.error("AI ERROR:", err);
+
+    res.status(500).json({
+      error: err.message
     });
   }
 });
