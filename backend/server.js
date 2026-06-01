@@ -2,78 +2,75 @@ import express from "express";
 import cors from "cors";
 import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import yahooFinance from "yahoo-finance2";
+import pkg from "stock-nse-india";
+
+const { NseIndia } = pkg;
 
 const app = express();
-
-app.get("/test-stock", async (req, res) => {
-  try {
-    const result =
-      await yahooFinance.quote("TCS.NS");
-
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({
-      error: err.message,
-      stack: err.stack
-    });
-  }
-});
-
-app.get("/debug", (req, res) => {
-  res.json({
-    yahooFinance
-  });
-});
-
-app.get("/methods", (req, res) => {
-  res.json(
-    Object.getOwnPropertyNames(
-      Object.getPrototypeOf(yahooFinance)
-    )
-  );
-});
 
 app.use(cors());
 app.use(express.json());
 
+const nse = new NseIndia();
+
+// ---------------- GEMINI ----------------
+const genAI = new GoogleGenerativeAI(
+  process.env.GEMINI_API_KEY
+);
+
 // ---------------- ROOT ----------------
 app.get("/", (req, res) => {
-  res.send("Hybrid Stock Backend Running ✅");
+  res.send("Stock Backend Running ✅");
 });
 
-// ---------------- SYMBOL FORMAT ----------------
-const formatSymbol = (symbol) => {
-  symbol = symbol.toUpperCase().trim();
+// ---------------- STOCK LIST ----------------
+const indianStocks = [
+  "TCS",
+  "INFY",
+  "RELIANCE",
+  "SBIN",
+  "HDFCBANK",
+  "ICICIBANK",
+  "WIPRO",
+  "LT",
+  "AXISBANK",
+  "KOTAKBANK"
+];
 
-  const indianStocks = [
-    "TCS",
-    "INFY",
-    "RELIANCE",
-    "SBIN",
-    "HDFCBANK",
-    "ICICIBANK",
-    "WIPRO",
-    "LT",
-    "AXISBANK",
-    "KOTAKBANK"
-  ];
-
-  if (indianStocks.includes(symbol)) {
-    return `${symbol}:NSE`;
-  }
-
-  return symbol;
+const isIndianStock = (symbol) => {
+  return indianStocks.includes(
+    symbol.toUpperCase()
+  );
 };
 
 // ---------------- STOCK PRICE ----------------
 app.get("/api/stock/:symbol", async (req, res) => {
   try {
-    const symbol = formatSymbol(req.params.symbol);
+    const symbol =
+      req.params.symbol.toUpperCase();
 
-    const response = await axios.get(
-      `https://api.twelvedata.com/price?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
-    );
+    // -------- NSE STOCKS --------
+    if (isIndianStock(symbol)) {
+      const data =
+        await nse.getEquityDetails(symbol);
+
+      return res.json({
+        symbol,
+        name: data.info.companyName,
+        price:
+          data.priceInfo.lastPrice,
+        change:
+          data.priceInfo.change,
+        changePercent:
+          data.priceInfo.pChange
+      });
+    }
+
+    // -------- US STOCKS --------
+    const response =
+      await axios.get(
+        `https://api.twelvedata.com/price?symbol=${symbol}&apikey=${process.env.TWELVE_DATA_API_KEY}`
+      );
 
     res.json({
       symbol,
@@ -81,81 +78,124 @@ app.get("/api/stock/:symbol", async (req, res) => {
     });
 
   } catch (err) {
-  console.error("FULL ERROR:");
-
-  console.error(err.response?.data);
-
-  res.status(500).json({
-    error: err.message,
-    providerResponse: err.response?.data,
-    url: err.config?.url
-  });
-}
-});
-// ---------------- HISTORY ----------------
-app.get("/api/history/:symbol", async (req, res) => {
-  try {
-    const symbol = formatSymbol(req.params.symbol);
-
-    const response = await axios.get(
-      `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=100&apikey=${process.env.TWELVE_DATA_API_KEY}`
-    );
-
-    const history =
-      response.data.values?.map(item => ({
-        datetime: item.datetime,
-        close: Number(item.close)
-      })) || [];
-
-    res.json(history.reverse());
-
-  } catch (err) {
-  console.error("HISTORY ERROR:", err);
-
-  res.status(500).json({
-    error: err.message,
-    stack: err.stack
-  });
-}
-});
-// ---------------- NEWS ----------------
-app.get("/api/news/:symbol", async (req, res) => {
-  try {
-    const response = await axios.get(
-      `https://newsapi.org/v2/everything?q=${req.params.symbol}&sortBy=publishedAt&language=en&apiKey=${process.env.NEWS_API_KEY}`
-    );
-
-    res.json(response.data);
-  } catch (err) {
     console.error(err);
 
     res.status(500).json({
-      error: "News fetch failed",
+      error: "Stock fetch failed",
+      details: err.message
     });
   }
 });
 
-// ---------------- OPENAI ----------------
+// ---------------- HISTORY ----------------
+app.get("/api/history/:symbol", async (req, res) => {
+  try {
+    const symbol =
+      req.params.symbol.toUpperCase();
 
-const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY
-);
+    // -------- NSE HISTORY --------
+    if (isIndianStock(symbol)) {
+      const data =
+        await nse.getEquityHistoricalData(
+          symbol,
+          "01-01-2024",
+          "31-12-2025"
+        );
+
+      const history = data.map(
+        (item) => ({
+          datetime: item.CH_TIMESTAMP,
+          open: item.CH_OPENING_PRICE,
+          high: item.CH_TRADE_HIGH_PRICE,
+          low: item.CH_TRADE_LOW_PRICE,
+          close:
+            item.CH_CLOSING_PRICE,
+          volume:
+            item.CH_TOT_TRADED_QTY
+        })
+      );
+
+      return res.json(history);
+    }
+
+    // -------- US HISTORY --------
+    const response =
+      await axios.get(
+        `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=200&apikey=${process.env.TWELVE_DATA_API_KEY}`
+      );
+
+    const history =
+      response.data.values?.map(
+        (item) => ({
+          datetime:
+            item.datetime,
+          open: item.open,
+          high: item.high,
+          low: item.low,
+          close: item.close,
+          volume: item.volume
+        })
+      ) || [];
+
+    res.json(history.reverse());
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      error: "History fetch failed",
+      details: err.message
+    });
+  }
+});
+
+// ---------------- NEWS ----------------
+app.get("/api/news/:symbol", async (req, res) => {
+  try {
+    const symbol =
+      req.params.symbol;
+
+    const response =
+      await axios.get(
+        `https://newsapi.org/v2/everything?q=${symbol}&sortBy=publishedAt&language=en&apiKey=${process.env.NEWS_API_KEY}`
+      );
+
+    res.json(response.data);
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      error: "News fetch failed"
+    });
+  }
+});
 
 // ---------------- AI ----------------
 app.post("/api/ai", async (req, res) => {
   try {
-    const { symbol, price, history = [] } =
-      req.body;
+    const {
+      symbol,
+      price,
+      history = []
+    } = req.body;
 
     const closes = history
       .slice(-30)
-      .map((item) => item.close);
+      .map((item) =>
+        typeof item === "object"
+          ? item.close
+          : item
+      );
 
     const prompt = `
+You are a professional stock analyst.
+
 Stock: ${symbol}
+
 Current Price: ${price}
 
-Recent Prices:
+Recent Closing Prices:
 ${closes.join(", ")}
 
 Provide:
@@ -169,30 +209,37 @@ Reason:
 
     const model =
       genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: "gemini-1.5-flash"
       });
 
     const result =
-      await model.generateContent(prompt);
+      await model.generateContent(
+        prompt
+      );
 
     const text =
       result.response.text();
 
     res.json({
-      analysis: text,
+      analysis: text
     });
+
   } catch (err) {
     console.error(err);
 
     res.status(500).json({
       error: "AI failed",
+      details: err.message
     });
   }
 });
 
 // ---------------- START ----------------
-const PORT = process.env.PORT || 5000;
+const PORT =
+  process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
+  console.log(
+    `Server running on ${PORT}`
+  );
 });
