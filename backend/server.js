@@ -56,14 +56,11 @@ const formatSymbol = (symbol) => {
     "WIPRO",
     "LT",
     "AXISBANK",
-    "KOTAKBANK",
+    "KOTAKBANK"
   ];
 
-  if (
-    indianStocks.includes(symbol) &&
-    !symbol.endsWith(".NS")
-  ) {
-    return `${symbol}.NS`;
+  if (indianStocks.includes(symbol)) {
+    return `${symbol}:NSE`;
   }
 
   return symbol;
