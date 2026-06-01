@@ -84,11 +84,14 @@ app.get("/api/stock/:symbol", async (req, res) => {
     });
 
   } catch (err) {
-  console.error("STOCK ERROR:", err);
+  console.error("FULL ERROR:");
+
+  console.error(err.response?.data);
 
   res.status(500).json({
     error: err.message,
-    stack: err.stack
+    providerResponse: err.response?.data,
+    url: err.config?.url
   });
 }
 });
