@@ -11,6 +11,6 @@
     "axios": "^1.7.2",
     "cors": "^2.8.5",
     "express": "^4.19.2",
-    "yahoo-finance2": "^2.13.3"
+    "stock-nse-india": "^1.2.6"
   }
 }
