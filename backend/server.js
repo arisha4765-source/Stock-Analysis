@@ -86,14 +86,12 @@ app.get("/api/stock/:symbol", async (req, res) => {
     });
 
   } catch (err) {
-  console.log(
-    "BACKEND ERROR:",
-    err.response?.data
-  );
+  console.error("STOCK ERROR:", err);
 
-  console.log(err);
-
-  alert("Failed to load stock data");
+  res.status(500).json({
+    error: err.message,
+    stack: err.stack
+  });
 }
 });
 // ---------------- HISTORY ----------------
@@ -114,10 +112,13 @@ app.get("/api/history/:symbol", async (req, res) => {
     res.json(history.reverse());
 
   } catch (err) {
-    res.status(500).json({
-      error: "History fetch failed"
-    });
-  }
+  console.error("HISTORY ERROR:", err);
+
+  res.status(500).json({
+    error: err.message,
+    stack: err.stack
+  });
+}
 });
 // ---------------- NEWS ----------------
 app.get("/api/news/:symbol", async (req, res) => {
