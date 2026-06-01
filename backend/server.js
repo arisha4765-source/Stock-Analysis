@@ -2,9 +2,7 @@ import express from "express";
 import cors from "cors";
 import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import YahooFinance from "yahoo-finance2";
-
-const yahooFinance = new YahooFinance();
+import yahooFinance from "yahoo-finance2";
 
 const app = express();
 
